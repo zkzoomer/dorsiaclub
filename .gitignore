@@ -1,0 +1,44 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.env
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# sensible 
+/src/contracts/BusinessCard/.secret
+
+# folder I always use for dumping stuff
+/dump
+
+# oracle production folders
+/src/oracle/__pycache__
+/src/oracle/doc
+/src/oracle/errors
+/src/oracle/logos
+/src/oracle/save
+/src/oracle/.idea
+
+# TG bot session
+/src/oracle/Dorsia_TGBot.session
+
+# oracle assets, kept private
+/src/oracle/assets/

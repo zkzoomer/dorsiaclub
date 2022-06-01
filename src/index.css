@@ -1,0 +1,52 @@
+@font-face {
+    font-family: 'Bookman-Type';
+    src: local('Bookman-Type'), url(./fonts/Bookman-Type.otf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Babylon-Script';
+    src: local('Babylon-Script'), url(./fonts/Babylon-Script.otf) format('truetype');
+}
+
+
+/* GOOD FOR TITLES */
+@font-face {
+    font-family: 'Century-Block';
+    src: local('Century-Block'), url(./fonts/Century-Block.otf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Dorsian-Sea';
+    src: local('Dorsian-Sea'), url(./fonts/Dorsian-Sea.otf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Esoteric-Antiqua';
+    src: local('Esoteric-Antiqua'), url(./fonts/Esoteric-Antiqua.otf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Pale-Nimbus';
+    src: local('Pale-Nimbus'), url(./fonts/Pale-Nimbus.otf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Port-Carruthers';
+    src: local('Port-Carruthers'), url(./fonts/Port-Carruthers.otf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Romalian-Type';
+    src: local('Romalian-Type'), url(./fonts/Romalian-Type.otf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Royal-Script';
+    src: local('Royal-Script'), url(./fonts/Royal-Script.otf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Silian-Rail';
+    src: local('Silian-Rail'), url(./fonts/Silian-Rail.OTF) format('truetype');
+}
+
