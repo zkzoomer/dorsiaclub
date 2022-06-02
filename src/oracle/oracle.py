@@ -297,7 +297,7 @@ if __name__ == '__main__':
         "provider": "wss://matic.getblock.io/testnet/?api_key=" + getblock_key,
         "kind": "WS"
     }
-    start_block = 18813761
+    start_block = 26573611
     print('starting')
     lo = ListeningOracle(processingIds, cardContract, start_block)
     print('running')

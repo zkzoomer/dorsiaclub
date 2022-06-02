@@ -23,7 +23,7 @@ export const config = {
 };
 
 // Business Card smart contract
-export const contractAddress = '0x448310Ce1196f5EA89f638752d2f879B9B772300'
+export const contractAddress = '0x9aEbaf440979c5352cf10DCD31Ba059fd34161Bc'
 const contractAbi = require('./contracts/BusinessCard/build/contracts/BusinessCard.json')['abi']
 export const _provider = new ethers.providers.JsonRpcProvider(RPC)
 export const contract = new ethers.Contract(contractAddress, contractAbi, _provider)

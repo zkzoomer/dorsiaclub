@@ -27,3 +27,14 @@ Built on React.js and supporting Metamask, it allows end users to:
 - Check the gallery to see all existing Cards/the ones they own
 - Change the name and/or position of a Card they own
 - Swap the name and position between two Cards they own
+
+## Links and resources
+
+A demo version deployed in the Mumbai testnet can be seen on: https://dorsiaclub-testnet.netlify.app/
+You can get some testnet MATIC over at: https://faucet.polygon.technology/
+Go ahead and mint yours, free of charge.
+
+Business Card smart contract: [0x9aEbaf440979c5352cf10DCD31Ba059fd34161Bc](https://mumbai.polygonscan.com/address/0x9aEbaf440979c5352cf10DCD31Ba059fd34161Bc)
+Oracle address: [0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8](https://mumbai.polygonscan.com/address/0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8)
+
+Reach out on Twitter: https://twitter.com/0xdeenz
