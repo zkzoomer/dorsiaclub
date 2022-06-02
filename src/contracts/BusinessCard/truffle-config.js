@@ -44,8 +44,8 @@
        from: '0xF5BaAcF683e70d38697BaF9bAa035721d8D4B3aD'  // Comment out for truffle testing
      },
      testnet: {
-       provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-2-s1.binance.org:8545/`),
-       network_id: 97,
+       provider: () => new HDWalletProvider(mnemonic, `https://matic-mumbai.chainstacklabs.com`),
+       network_id: 80001,
        confirmations: 1,
        timeoutBlocks: 1000,
        skipDryRun: true

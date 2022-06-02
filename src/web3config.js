@@ -1,18 +1,18 @@
 import { ethers } from "ethers"; 
 
 // AVAX testnet:
-export const chainId = 97;
-export const RPC = "https://data-seed-prebsc-1-s1.binance.org:8545/"
+export const chainId = 80001;
+export const RPC = "https://matic-mumbai.chainstacklabs.com"
 export const network = {
   chainId: `0x${Number(chainId).toString(16)}`,
-  chainName: "Smart Chain - Testnet",
+  chainName: "Mumbai",
   nativeCurrency: {
-    name: "BNB",
-    symbol: "BNB",
+    name: "Polygon",
+    symbol: "MATIC",
     decimals: 18
   },
   rpcUrls: [RPC],
-  blockExplorerUrls: ["https://testnet.bscscan.com"]
+  blockExplorerUrls: ["https://mumbai.polygonscan.com"]
 };
 
 export const config = {

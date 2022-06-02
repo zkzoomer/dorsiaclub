@@ -7665,7 +7665,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.3",
-  "updatedAt": "2022-06-01T23:02:03.187Z",
+  "updatedAt": "2022-06-02T19:20:37.105Z",
   "devdoc": {
     "details": "Useful functions for validating the name and position of Business Cards",
     "kind": "dev",

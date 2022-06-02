@@ -69799,10 +69799,16 @@
       "links": {},
       "address": "0x116a1be1A9Aee6D2560eabDCCB51Fd509FdaA86B",
       "transactionHash": "0xd3fd7230eb45daaf3248a5018517264a7dc8780480e71579d14e6f0d81ddeaa7"
+    },
+    "80001": {
+      "events": {},
+      "links": {},
+      "address": "0x9aEbaf440979c5352cf10DCD31Ba059fd34161Bc",
+      "transactionHash": "0x9470d42a0e3bbb81c5fcc0e4a4dddf2d6bb5eedcc4911ece0dc672a4c4ef0423"
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2022-06-01T23:03:22.626Z",
+  "updatedAt": "2022-06-02T19:21:34.795Z",
   "networkType": "ethereum",
   "devdoc": {
     "details": "see https://eips.ethereum.org/EIPS/eip-721",

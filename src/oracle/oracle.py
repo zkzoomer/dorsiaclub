@@ -48,6 +48,7 @@ class ListeningOracle():
             self.web3 = Web3(Web3.WebsocketProvider(card_contract['provider']))
         self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
+
         with open('../contracts/BusinessCard/build/contracts/BusinessCard.json') as f:
             cardABI = json.load(f)['abi']  # Reading the provided Card contract ABI
         card_addy = card_contract['addy']
@@ -59,6 +60,12 @@ class ListeningOracle():
         self.wait_time = 5
         # Time waited between sending OK-status messages, in seconds
         self.message_wait_time = 60*60
+
+        # Admin Telegram chat
+        with open('./doc/TELEGRAM_API.json') as f:
+            data = json.load(f)
+            self.bot_token = data['PRIVATE_BOT_API_TOKEN']
+            self.channel_id = data['PRIVATE_CHANNEL_ID']
 
         # Read the sneedphrase from the txt file, or generate one if none exists prior
         try:
@@ -89,15 +96,19 @@ class ListeningOracle():
         # Clean derivation indexes/paths
         bip44_hdwallet.clean_derivation()
 
-        # Starting nonce, program will add to it sequentially
-        self.nonce = self.web3.eth.get_transaction_count(self.addy)
-
         # Saving addy in a file to then get it whitelisted in the Card smart contract -- this gets done every execution
         with open('./doc/addy.txt', 'w') as f:
             f.write(self.addy)
+            f.close()
         # Also saving the pkey for development purposes
         with open('./doc/pkey.txt', 'w') as f:
             f.write(self.pkey)
+            f.close()
+
+        # Starting nonce, program will add to it sequentially
+        self.nonce = self.web3.eth.get_transaction_count(self.addy, "pending")
+
+
 
     # https://cryptomarketpool.com/how-to-listen-for-ethereum-events-using-web3-in-python/
 
@@ -166,6 +177,14 @@ class ListeningOracle():
             os.remove(thumbnail_path)
             # Removes the card object from memory to save up $$$
             del newcardwhatdoyouthink
+            # Inform admin of updated card
+            req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
+                botToken=self.bot_token, chatID=self.channel_id,
+                text='Just processed token #{}'.format(tokenId)
+            )
+            requests.post(req)
+            # Restarts the program -- prevents issues on server
+            exit()
 
 
     async def _handle_live_events(self, event_filter, poll_interval):
@@ -188,11 +207,6 @@ class ListeningOracle():
 
         start_time = time.time()
         message_time = time.time()
-
-        with open('./doc/TELEGRAM_API.json') as f:
-            data = json.load(f)
-            bot_token = data['PRIVATE_BOT_API_TOKEN']
-            channel_id = data['PRIVATE_CHANNEL_ID']
 
         # Will loop forever updating new events
         while True:
@@ -229,7 +243,7 @@ class ListeningOracle():
 
                 # Send a request to post the message
                 req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
-                    botToken=bot_token, chatID=channel_id,
+                    botToken=self.bot_token, chatID=self.channel_id,
                     text='Oracle running smoothly, current balance: {}'.format(balance)
                 )
                 requests.post(req)
@@ -273,16 +287,20 @@ class ListeningOracle():
 if __name__ == '__main__':
     processingIds = '0123456789'
 
+    with open('./doc/GETBLOCK_API.json') as f:
+        data = json.load(f)
+        getblock_key = data['GETBLOCK_API_KEY']
+
     # BSC Testnet
     cardContract = {
         "addy": '0x448310Ce1196f5EA89f638752d2f879B9B772300',
-        "provider": "wss://bsc.getblock.io/testnet/?api_key=6fe7a054-76d3-4dd7-867a-3be81cc8a5ab",
+        "provider": "wss://matic.getblock.io/testnet/?api_key=" + getblock_key,
         "kind": "WS"
     }
     start_block = 18813761
-
-    lo = ListeningOracle(processingIds, cardContract, start_block)
     print('starting')
+    lo = ListeningOracle(processingIds, cardContract, start_block)
+    print('running')
     asyncio.run(lo.run())
 
     # For development: https://github.com/ChainSafe/web3.js/issues/2053
