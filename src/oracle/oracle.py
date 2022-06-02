@@ -293,7 +293,7 @@ if __name__ == '__main__':
 
     # BSC Testnet
     cardContract = {
-        "addy": '0x448310Ce1196f5EA89f638752d2f879B9B772300',
+        "addy": '0x9aEbaf440979c5352cf10DCD31Ba059fd34161Bc',
         "provider": "wss://matic.getblock.io/testnet/?api_key=" + getblock_key,
         "kind": "WS"
     }
