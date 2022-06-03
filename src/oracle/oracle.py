@@ -240,7 +240,7 @@ class ListeningOracle():
             else:
                 time.sleep(self.wait_time)
 
-            # Sending OK-status messages to Telegram admin -- to follow live the state of the bot
+            # Sending OK-status messages to Telegram adminz -- to follow live the state of the bot
             if int(time.time()) % self.message_wait_time <= 60:
                 balance = self.web3.eth.get_balance(self.addy)
                 balance = round(self.web3.fromWei(balance, 'ether'), 4)
@@ -254,34 +254,6 @@ class ListeningOracle():
                 # Update the last message time
                 message_time = time.time()
 
-
-        ### PROCESSING CURRENT EVENTS LIVE - NOT USED
-        """event_filter = self.contract.events.NewRequestEvent.createFilter(fromBlock=self.start_block)
-
-        loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(
-                asyncio.gather(
-                    self._handle_live_events(event_filter, 2)
-                )
-            )
-        finally:
-            loop.close()"""
-
-        """
-        RUNNING LOOP:
-            >let start = 0, or block at deployment, or block at reupdating, or other
-            >define threshold as timeframe to wait between two requests to not flood the service:
-                -> blocks get added every 3 seconds on BSC
-            >while True loop:
-                >measure start_time
-                >send request to see logs from_block = start
-                >process each of the requests, if any, as already implemented
-                >measure finish_time
-                >if finish_time - start_time > threshold, continue loop
-                >if finish_time - start_time < threshold, sleep for threshold - (finish_time - start_time), then continue
-                >>>continue loop means whe set the start_block at the current one
-        """
 
 if __name__ == '__main__':
     processingIds = '0123456789'
