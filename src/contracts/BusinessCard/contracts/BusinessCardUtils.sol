@@ -20,7 +20,7 @@ library BusinessCardUtils {
         if(b[0] == 0x20) return false; 
         if (b[b.length - 1] == 0x20) return false; 
         // Characters check
-        require(validateAlphabetical(str), "Non valid characters");
+        require(validateString(str), "Non valid characters");
 
         // Name is validated 
         return true;
@@ -39,27 +39,26 @@ library BusinessCardUtils {
         if(b[0] == 0x20) return false; 
         if (b[b.length - 1] == 0x20) return false; 
         // Characters check
-        require(validateAlphabetical(str), "Non valid characters");
+        require(validateString(str), "Non valid characters");
 
         // Position is validated
         return true;
     }
 
     /**
-     * @dev Validates that string is only alphabetical
+     * @dev Validates that string contains valid characters, alphanumerical and some special symbols
      */
-    function validateAlphabetical(string memory str) internal pure returns (bool) {
+    function validateString(string memory str) internal pure returns (bool) {
         bytes memory b = bytes(str);
         bytes1 lastChar = b[0];
 
-        // TODO: gas saving for this bit
         for(uint i; i<b.length; ++i){
             bytes1 char = b[i];
 
             if (char == 0x20 && lastChar == 0x20) return false; // Cannot contain continuous spaces
 
             if(
-                !(char >= 0x20 && char <= 0x3F) &&  // Special characters
+                !(char >= 0x20 && char <= 0x3F) &&  // Special characters and numbers
                 !(char >= 0x41 && char <= 0x5A) &&  // A-Z
                 !(char >= 0x61 && char <= 0x7A)  // a-z
             )
@@ -77,7 +76,6 @@ library BusinessCardUtils {
         bytes memory bStr = bytes(str);
         bytes memory bLower = new bytes(bStr.length);
 
-        // TODO: gas saving for this bit
         for (uint i = 0; i < bStr.length; ++i) {
             // Uppercase character
             if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {

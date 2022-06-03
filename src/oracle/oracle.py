@@ -108,8 +108,6 @@ class ListeningOracle():
         # Starting nonce, program will add to it sequentially
         self.nonce = self.web3.eth.get_transaction_count(self.addy, "pending")
 
-
-
     # https://cryptomarketpool.com/how-to-listen-for-ethereum-events-using-web3-in-python/
 
     async def _handle_event(self, event_data):
@@ -136,9 +134,6 @@ class ListeningOracle():
         newcardwhatdoyouthink = Card(tokenId, name, position, genes)
         tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
 
-        #print('token URI:', tokenURI)
-
-        #gas = await self.web3.eth.gasPrice
         # Calls the Card contract callback function to finalize the update of this tokenURI
         try:
             callback = self.contract.functions.callback(
@@ -148,7 +143,6 @@ class ListeningOracle():
                 'from': self.addy,
                 'nonce': self.nonce,
                 'gasPrice': self.web3.eth.gas_price
-                # TODO: add fast gas
             })
         except:
             pass
@@ -157,20 +151,14 @@ class ListeningOracle():
         self.nonce += 1
 
         try:
-            # TODO: wait for tx to be finalized before progressing
             signed_tx = self.web3.eth.account.sign_transaction(callback, self.pkey)
             # Send transaction
             tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             #print('signed and done: ', tx_hash.hex())
             # Inform on public telegram bot about successful update with the image that was stored by the Card class
         except:
-            # Transaction failed, inform on my private telegram bot to keep these rare events in check
+            # Transaction failed, will try again after restart
             pass
-            # TODO: MUST CHECK if tx failed due to no funds, inform as such on private tg bot
-
-            # Delete the stored image from server memory
-            #print('could not')
-            # Delete the card object
         finally:
             # Removes the images from the disk
             os.remove(image_path)
@@ -180,7 +168,7 @@ class ListeningOracle():
             # Inform admin of updated card
             req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                 botToken=self.bot_token, chatID=self.channel_id,
-                text='Just processed token #{}'.format(tokenId)
+                text='Just processed token {}'.format(tokenId)
             )
             requests.post(req)
             # Restarts the program -- prevents issues on server
@@ -279,11 +267,6 @@ class ListeningOracle():
                 >>>continue loop means whe set the start_block at the current one
         """
 
-
-#oracle_contract = web3.eth.contract(address=oracle, abi=oracleABI)
-
-# json.loads(Web3.toJSON(event))
-
 if __name__ == '__main__':
     processingIds = '0123456789'
 
@@ -291,21 +274,15 @@ if __name__ == '__main__':
         data = json.load(f)
         getblock_key = data['GETBLOCK_API_KEY']
 
-    # BSC Testnet
+    # MATIC testnet
     cardContract = {
-        "addy": '0x9aEbaf440979c5352cf10DCD31Ba059fd34161Bc',
+        "addy": '0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d',
         "provider": "wss://matic.getblock.io/testnet/?api_key=" + getblock_key,
         "kind": "WS"
     }
-    start_block = 26573611
-    print('starting')
+    start_block = 26581790
     lo = ListeningOracle(processingIds, cardContract, start_block)
-    print('running')
     asyncio.run(lo.run())
 
     # For development: https://github.com/ChainSafe/web3.js/issues/2053
-
-    # TODO: test several transactions being made AT THE SAME TIME, does the oracle get to process them? and how - yes it do
-
-    # TODO: should restart itself every now and then ? - properly stress test it to see if necessary
 

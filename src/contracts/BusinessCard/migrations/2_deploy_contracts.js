@@ -10,5 +10,5 @@ const BusinessCard = artifacts.require("BusinessCard");
  */
 
 module.exports = function (deployer) {
-  deployer.deploy(BusinessCard, 'Business Card', 'CARD', '', '');
+  deployer.deploy(BusinessCard, 'Business Card', 'CARD', 'https://dorsiaclub.mypinata.cloud/ipfs/Qm', 'QFrkXsEVvek1UJjYCDr9NjXyFaEtwyzFYZPvPTpMdwxA');
 };

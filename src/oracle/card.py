@@ -77,16 +77,16 @@ class Card():
                 99: 'White'
             },
             'Font': {
-                4: 'Dorsian Sea',  # 5%
+                4: 'Dorsian Sea', 
                 14: 'Port Carruthers',
                 24: 'Silian Rail',
                 34: 'Romalian Type',
                 44: 'Pale Nimbus',
                 54: 'Esoteric Antiqua',
-                59: 'Century Block',  # 5%
-                74: 'Bookman Type',  # 15%
+                59: 'Century Block', 
+                74: 'Bookman Type', 
                 84: 'Babylon Script',
-                99: 'Royal Script'  # 15%
+                99: 'Royal Script'
             },
             'Location': {
                 14: 'Golden Bullrun',
@@ -544,7 +544,7 @@ class Card():
         The name and description fields are different for every token would be shown in the marketplace, and thus, in 
         a way, follow a similar structure to the name - position structure defined for the Business Card
         """
-        #
+        
         metadata = {
             "id": self.tokenId,
             "name": "Dorsia Club",
@@ -676,7 +676,7 @@ if __name__ == '__main__':
     # Generating assets for landing page
     names_positions = [
         ['Satoshi NAKAMOTO', 'CEO of Bitcoin'],
-        ['El Dip', 'CEO of Dorsia Club'],
+        ['Deenz', 'CEO of Dorsia Club'],
         ['Nayib BUKELE', 'El Presidente'],
         ['Peter SCHIFF', 'CEO of Gold'],
         ['Michael SAYLOR', 'Micro Tragedy'],

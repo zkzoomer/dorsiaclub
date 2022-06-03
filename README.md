@@ -34,7 +34,7 @@ A demo version deployed in the Mumbai testnet can be seen on: https://dorsiaclub
 You can get some testnet MATIC over at: https://faucet.polygon.technology/
 Go ahead and mint yours, free of charge.
 
-Business Card smart contract: [0x9aEbaf440979c5352cf10DCD31Ba059fd34161Bc](https://mumbai.polygonscan.com/address/0x9aEbaf440979c5352cf10DCD31Ba059fd34161Bc)
+Business Card smart contract: [0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d](https://mumbai.polygonscan.com/address/0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d)
 Oracle address: [0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8](https://mumbai.polygonscan.com/address/0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8)
 
 Reach out on Twitter: https://twitter.com/0xdeenz

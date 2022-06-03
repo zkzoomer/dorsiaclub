@@ -2,8 +2,6 @@
 
 // Because every self-respected businessman needs his business card
 
-// TODO: gas optimization, use bytes4 and similar instead of string where possible
-
 pragma solidity ^0.8.0;
 
 import "./Context.sol";
@@ -139,7 +137,6 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     
     // Price update events
     event NewUpdatePriceEvent(uint256 newUpdatePrice);
-    ////////////////////////////////////////////////////////////
 
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection, and defining base and default URIs.
@@ -163,7 +160,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev Sets up a new oracle that handles the dynamic aspect of the NFT
      */
-    function setOracle(address _serverOracle) public onlyOwner {
+    function setOracle(address _serverOracle) external onlyOwner {
         require(_serverOracle != address(0)); // dev: cannot set the oracle to the zero address
         serverOracle = _serverOracle;
         emit NewServerOracleEvent(serverOracle);
@@ -172,9 +169,9 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev Changes the update price for the usage of the oracle
      */
-    function modifyUpdatePrice(uint256 _newUpdatePrice) public onlyOwner {
-        require(_newUpdatePrice >= _oraclePrice); // dev: Update price must always cover the gas costs of running the oracle
-        _updatePrice = _newUpdatePrice;
+    function modifyUpdatePrice(uint256 newUpdatePrice) external onlyOwner {
+        require(newUpdatePrice >= _oraclePrice); // dev: Update price must always cover the gas costs of running the oracle
+        _updatePrice = newUpdatePrice;
         emit NewUpdatePriceEvent(_updatePrice);
     }
 
@@ -205,7 +202,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
      * @dev Updates a certain token URI and clears the corresponding update request
      * Only the assigned server oracle is allowed to call this function
      */
-     function callback(uint256 _tokenId, string memory _tokenURI) public onlyOracle {
+     function callback(uint256 _tokenId, string memory _tokenURI) external onlyOracle {
         require(requests[_tokenId]); // dev: Request not in pending list
         _setTokenURI(_tokenId, _tokenURI);
         delete requests[_tokenId];
@@ -343,14 +340,14 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev Updates the tokenURI, intented to be used only when oracle fails to update a tokenURI
      */
-    function updateTokenURI(uint256 tokenId) public onlyOwner {
+    function updateTokenURI(uint256 tokenId) external onlyOwner {
         _updateTokenURI(tokenId);
     }
 
     /**
      * @dev Starts the sale, cannot do so until the oracle is defined
      */
-    function startSale() public onlyOwner {
+    function startSale() external onlyOwner {
         require(serverOracle != address(0));  // dev: Oracle not defined
         saleStarted = true;
     }
@@ -358,7 +355,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev Pauses the sale
      */
-    function pauseSale() public onlyOwner {
+    function pauseSale() external onlyOwner {
         saleStarted = false;
     }
 
@@ -388,7 +385,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev For setting the baseURI for all tokenId's.
      */
-    function setBaseURI(string memory newBaseURI) public onlyOwner {
+    function setBaseURI(string memory newBaseURI) external onlyOwner {
         require(bytes(newBaseURI).length > 0);
         _baseURI = newBaseURI;
     }
@@ -405,7 +402,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev For setting the default URI for all tokenId's. 
      */
-    function setDefaultURI(string memory newDefaultURI) public onlyOwner {
+    function setDefaultURI(string memory newDefaultURI) external onlyOwner {
         require(bytes(newDefaultURI).length > 0, "Cannot be set to empty string");
         _defaultURI = newDefaultURI;
     }
@@ -429,11 +426,10 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev Withdraw balance from this contract (Callable by owner)
     */
-    function withdraw() onlyOwner public {
+    function withdraw() onlyOwner external {
         uint balance = address(this).balance;
         payable(msg.sender).transfer(balance);
     }
-    ////////////////////////////////////////////////////////////
 
     /*
      * @dev ERC721 code
