@@ -28,7 +28,7 @@ web3 = Web3(Web3.HTTPProvider(RPC))
 
 class ListeningOracle():
 
-    def __init__(self, processing_ids, card_contract, start_block):
+    def __init__(self, processing_ids, card_contract, start_block_file):
         """
         Initializes the ListeningOracle
 
@@ -51,31 +51,39 @@ class ListeningOracle():
 
         with open('../contracts/BusinessCard/build/contracts/BusinessCard.json') as f:
             cardABI = json.load(f)['abi']  # Reading the provided Card contract ABI
+            f.close()
         card_addy = card_contract['addy']
         self.contract = self.web3.eth.contract(address=card_addy, abi=cardABI)
 
         # Will start iterating on the starting block provided
-        self.last_block = start_block
-        # Minimum waiting time between managing updates, in seconds
-        self.wait_time = 5
-        # Time waited between sending OK-status messages, in seconds
-        self.message_wait_time = 60*60
+        self.start_block_file = start_block_file
+        with open(start_block_file, 'r') as f:
+            self.last_block = int(f.read())
+            f.close()
 
         # Admin Telegram chat
         with open('./doc/TELEGRAM_API.json') as f:
             data = json.load(f)
             self.bot_token = data['PRIVATE_BOT_API_TOKEN']
             self.channel_id = data['PRIVATE_CHANNEL_ID']
+            f.close()
+
+        # Minimum waiting time between managing updates, in seconds
+        self.wait_time = 5
+        # Time waited between sending OK-status messages to admin telegram chat, in seconds
+        self.message_wait_time = 30*60
 
         # Read the sneedphrase from the txt file, or generate one if none exists prior
         try:
             with open('./doc/sneed.txt', 'r') as f:
                 self.sneed = f.read()
+                f.close()
         except FileNotFoundError:
             # No sneed exists, generate one and save it
             self.sneed: str = generate_mnemonic(language="english", strength=128)
             with open('./doc/sneed.txt', 'x') as f:
                 f.write(self.sneed)
+                f.close()
 
         # Get the wallet addy for the first pkey and save it into a file if it does not already exist
         bip44_hdwallet: BIP44HDWallet = BIP44HDWallet(cryptocurrency=EthereumMainnet)
@@ -126,10 +134,6 @@ class ListeningOracle():
         for i in range(26 - len(genes)):
             genes = '0' + genes
 
-        # This instance will only update genes with ending digits in processing_ids
-        if not genes[-1] in processingIds:
-            return
-
         # Generates the new Card URI and gets the hash
         newcardwhatdoyouthink = Card(tokenId, name, position, genes)
         tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
@@ -147,7 +151,6 @@ class ListeningOracle():
         except:
             pass
 
-
         self.nonce += 1
 
         try:
@@ -156,23 +159,34 @@ class ListeningOracle():
             tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             #print('signed and done: ', tx_hash.hex())
             # Inform on public telegram bot about successful update with the image that was stored by the Card class
+            req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
+                botToken=self.bot_token, chatID=self.channel_id,
+                text='Just processed token {}'.format(tokenId)
+            )
+            requests.post(req)
         except:
             # Transaction failed, will try again after restart
-            pass
+            # TODO: have a vairable to not update block if failed tx
+            req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
+                botToken=self.bot_token, chatID=self.channel_id,
+                text='Callback for token {}  failed, restarting'.format(tokenId)
+            )
+            requests.post(req)
+
+            # Removes the images from the disk
+            os.remove(image_path)
+            os.remove(thumbnail_path)
+            # Removes the card object from memory to save up $$$
+            del newcardwhatdoyouthink
+
+            exit()
         finally:
             # Removes the images from the disk
             os.remove(image_path)
             os.remove(thumbnail_path)
             # Removes the card object from memory to save up $$$
             del newcardwhatdoyouthink
-            # Inform admin of updated card
-            req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
-                botToken=self.bot_token, chatID=self.channel_id,
-                text='Just processed token {}'.format(tokenId)
-            )
-            requests.post(req)
-            # Restarts the program -- prevents issues on server
-            exit()
+            
 
 
     async def _handle_live_events(self, event_filter, poll_interval):
@@ -193,7 +207,7 @@ class ListeningOracle():
         abi = event._get_event_abi()
         abi_codec = event.web3.codec
 
-        start_time = time.time()
+        start_time = time.time() + self.wait_time  # Little buffer for restarts -- time for tx to get through
         message_time = time.time()
 
         # Will loop forever updating new events
@@ -202,6 +216,7 @@ class ListeningOracle():
                 # Holds the new last block value, adding a little buffer for safety
                 current_block = self.web3.eth.get_block_number()
                 new_last_block = current_block - 1
+                
                 # Finds new logs
                 data_filter_set, event_filter_params = construct_event_filter_params(
                     abi,
@@ -216,16 +231,17 @@ class ListeningOracle():
                     event_data = get_event_data(abi_codec, abi, entry)
                     await self._handle_event(event_data['args'])
 
-                # Sets the last block
-                self.last_block = new_last_block
                 # Sets the new start time
                 start_time = time.time()
 
-            else:
-                time.sleep(0.5)
+                # Will restart after processing the batch
+                exit()
 
-            # Sending OK-status messages to a private channel -- to follow live the state of the bot
-            if time.time() - message_time >= self.message_wait_time:
+            else:
+                time.sleep(self.wait_time)
+
+            # Sending OK-status messages to Telegram admin -- to follow live the state of the bot
+            if int(time.time()) % self.message_wait_time <= 60:
                 balance = self.web3.eth.get_balance(self.addy)
                 balance = round(self.web3.fromWei(balance, 'ether'), 4)
 
@@ -273,6 +289,7 @@ if __name__ == '__main__':
     with open('./doc/GETBLOCK_API.json') as f:
         data = json.load(f)
         getblock_key = data['GETBLOCK_API_KEY']
+        f.close()
 
     # MATIC testnet
     cardContract = {
@@ -280,8 +297,8 @@ if __name__ == '__main__':
         "provider": "wss://matic.getblock.io/testnet/?api_key=" + getblock_key,
         "kind": "WS"
     }
-    start_block = 26581790
-    lo = ListeningOracle(processingIds, cardContract, start_block)
+    start_block_file = "./doc/start_block.txt"
+    lo = ListeningOracle(processingIds, cardContract, start_block_file)
     asyncio.run(lo.run())
 
     # For development: https://github.com/ChainSafe/web3.js/issues/2053
