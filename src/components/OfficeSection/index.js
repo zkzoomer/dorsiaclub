@@ -49,7 +49,7 @@ class Office extends React.Component {
                             <div className="timeline-date">Q3 2022</div>
                             <div className="timeline-content">
                                 <h3>Card Betting Game</h3>
-                                <p>Launch of our probably-fair, on-chain betting game, powered by our Business Card smart contract.</p>
+                                <p>Launch of our provably-fair, on-chain betting game, powered by our Business Card smart contract.</p>
                             </div>
                         </div>
                         <div className="timeline-item">

@@ -1,3 +1,4 @@
+![Patrick BATEMAN](./src/images/background.jpg)
 # Dorsia Club - Customizable NFT Business Cards
 
 The original idea behind this project was to create an NFT that users could customize, so that they could truly own their token: a dynamic NFT.
@@ -16,7 +17,9 @@ The NFT is powered by the Business Card [smart contract](./src/contracts/Busines
 
 ## The Oracle
 
-The [oracle](./src/oracle/oracle.py) is continuously listening for new update events, that indicate it that it needs to generate a new Business Card image. The assets that define this image are given by the genes attribute from the smart contract. The oracle constructs this [Business Card](./src/oracle/card.py), and will then upload this image onto IPFS. The resulting token metadata IPFS hash is uploaded on-chain. This hole process can take as little as 30 seconds.
+The [oracle](./src/oracle/oracle.py) is continuously listening for new update events, that indicate it that it needs to generate a new Business Card image. The assets that define this image are given by the genes attribute from the smart contract. The oracle constructs this [Business Card](./src/oracle/card.py), and will then upload this image onto IPFS. The resulting token metadata IPFS hash is uploaded on-chain. This whole process can take as little as 30 seconds.
+
+As we intend to launch this project comercially in the near future, the assets used for generating these Business Cards will not be made available in this repository.
 
 If you wish to test the functioning of this oracle on a local blockchain, you can follow these [instructions](./src/oracle/README.md).
 
@@ -28,13 +31,22 @@ Built on React.js and supporting Metamask, it allows end users to:
 - Change the name and/or position of a Card they own
 - Swap the name and position between two Cards they own
 
+## Possible improvements
+
+Business Card attributes are generated using the _keccak256_ hashing function as a source of randomness, and using as one of the inputs the block's timestamp. A miner/validator could potentially tamper with this RNG and generate a number of their liking. While such event is possible, we consider that the amount of computational resources necessary should deter any attacker from crafting the sickest of Business Cards.
+
+The oracle needs to process each Business Card one by one. In the event that all 1,111 Business Cards were minted at once, it would take ~9 hours for the oracle to process all of them. This could be solved by running several instances of it in parallel, each of them processing _tokenIds_ ending in a certain digit.
+
+The oracle as it stands is of course a centralized entity, currently being run on an AWS server. Since an IPFS content identifier (CID) is generated deterministically, different parties creating identical Business Cards will arrive at the same CID. This could be used to decentralize the oracle, allowing Business Card owners to generate Cards and interact with an additional smart contract that would act as the oracle.
+
 ## Links and resources
 
-A demo version deployed in the Mumbai testnet can be seen on: https://dorsiaclub-testnet.netlify.app/
-You can get some testnet MATIC over at: https://faucet.polygon.technology/
-Go ahead and mint yours, free of charge.
+You can go ahead and mint your own Business Card, free of charge:
+- First, get some testnet MATIC over at: https://faucet.polygon.technology/
+- Use the demo version deployed in the Mumbai testnet: https://dorsiaclub-testnet.netlify.app/
 
-Business Card smart contract: [0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d](https://mumbai.polygonscan.com/address/0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d)
-Oracle address: [0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8](https://mumbai.polygonscan.com/address/0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8)
+Polygonscan links:
+- Business Card smart contract: [0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d](https://mumbai.polygonscan.com/address/0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d)
+- Oracle address: [0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8](https://mumbai.polygonscan.com/address/0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8)
 
 Reach out on Twitter: https://twitter.com/0xdeenz
