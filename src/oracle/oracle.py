@@ -71,7 +71,7 @@ class ListeningOracle():
         # Minimum waiting time between managing updates, in seconds
         self.wait_time = 5
         # Time waited between sending OK-status messages to admin telegram chat, in seconds
-        self.message_wait_time = 30*60
+        self.message_wait_time = 60*60
 
         # Read the sneedphrase from the txt file, or generate one if none exists prior
         try:
@@ -253,6 +253,7 @@ class ListeningOracle():
                 requests.post(req)
                 # Update the last message time
                 message_time = time.time()
+                time.sleep(60)
 
 
 if __name__ == '__main__':

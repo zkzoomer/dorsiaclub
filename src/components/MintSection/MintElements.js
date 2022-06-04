@@ -179,7 +179,7 @@ export const ImgLivePosition = styled.div`
     right: 0;
     bottom: 52.5%;
     color: #1D1F20;
-    font-size: 16px;
+    font-size: 14px;
     justify-content: center;
     align-items: center;
     text-align: center;

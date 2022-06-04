@@ -29,7 +29,7 @@ export const _provider = new ethers.providers.JsonRpcProvider(RPC)
 export const contract = new ethers.Contract(contractAddress, contractAbi, _provider)
 
 // Default URI fed to the smart contract
-export const defaultURI = 'https://dorsiaclub.mypinata.cloud/ipfs/QmQFrkXsEVvek1UJjYCDr9NjXyFaEtwyzFYZPvPTpMdwxA'
+export const defaultURI = 'https://dorsiaclub.mypinata.cloud/ipfs/QmZGZ8ZVZexb5XgmWprH8nEyhaJzdfKxki8DoGuvPRcju6'
 
 // Card minting and updating requirements
 export const mintPrice = ethers.utils.parseUnits("0.1","ether");

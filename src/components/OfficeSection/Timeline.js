@@ -22,6 +22,6 @@ let TimelineElements = [
     {
         id: 5,
         title: 'Card Betting Game',
-        description: 'Launch of our probably-fair, on-chain betting game, powered by our Business Card smart contract.'
+        description: 'Launch of our provably-fair, on-chain betting game, powered by our Business Card smart contract.'
     }
 ]
