@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { DropdownButton } from 'react-bootstrap';
 
 export const PageContainer = styled.div`
     min-height: 101vh;
@@ -22,9 +23,45 @@ export const HeadContainer = styled.div`
     }
 `
 
+export const SearchContainer = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+`
+
+export const SearchItemsContainer = styled.div`
+    max-width: 1100px;
+    height: 50px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    align-items: center;
+
+    @media screen and (max-width: 1300px) {
+        max-width: 500px;
+        height: 100px;
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    @media screen and (max-width: 1000px) {
+        max-width: 300px;
+        height: 150px;
+        grid-template-columns: 1fr 1fr;
+    }
+`
+
+export const StyledDropdownButton = styled(DropdownButton)`
+    width: 25%; 
+    text-overflow: ellipsis;
+`
+
+export const SwitchRow = styled.div`
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    width: 400px;
+`
+
 export const SwitchContainer = styled.div`
     height: 50px;
-    background: #212529;
     display: flex;
     justify-content: flex-end;
     align-items: center;

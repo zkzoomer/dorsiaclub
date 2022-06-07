@@ -12,7 +12,8 @@
 }
 
 .dropdown-menu {
-  width: 70%;
+  min-width: 70%;
+  width: 300px;
   max-height: 200px;
   overflow-x: hidden;
   white-space: nowrap;

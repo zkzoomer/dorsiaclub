@@ -182,7 +182,7 @@ export const AttributeWrapper = styled.div`
 
 export const AttributeItem = styled.div`
     font-weight: 200;
-    font-weight: normal
+    font-weight: normal;
     margin-bottom: 10px;
 `
 
