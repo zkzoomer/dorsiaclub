@@ -28,41 +28,41 @@ const SearchItems = (props) => {
             marginRight: '10px',
             marginBottom: '10px',
             width: '175px',
-            backgroundColor: '#1D1F20',
+            backgroundColor: 'var(--light-background)',
             color: 'red',
-            border: '1px solid #6C757D',
+            border: '1px solid var(--main-text)',
             boxShadow: 'none',
             '&:hover': {
-                border: '1px solid #6C757D'
+                border: '1px solid var(--highlighted-text)'
             }
         }),
         placeholder: (provided, state) => ({
             ...provided,
-            color: '#F8F9FA'
+            color: 'var(--main-text)'
         }),
         dropdownIndicator: (provided, state) => ({
             ...provided,
-            color: '#F8F9FA'
+            color: 'var(--main-text)'
             
         }),
         container: (provided, state) => ({
             ...provided,
             /* width: '200px', */
-            color: '#F8F9FA', // E6C229
+            color: 'var(--main-text)', // E6C229
         }),
         option: (provided, state) => ({
             ...provided,
-            backgroundColor: '#1D1F20',
+            backgroundColor: 'var(--light-background)',
             padding: 20,
-            color: state.isSelected ? '#E6C229' : '#F8F9FA',
+            color: state.isSelected ? 'var(--button)' : 'var(--main-text)',
             '&:hover': {
-                backgroundColor: '#212529'
+                backgroundColor: 'var(--light-background-2)'
             },
         }),
         menuList: (provided, state) => ({
             ...provided,
             padding: 0,
-            backgroundColor: '#1D1F20',
+            backgroundColor: 'var(--light-background)',
         }),
         
     }

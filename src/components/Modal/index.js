@@ -16,17 +16,15 @@ const ModalWrapper = styled.div`
   margin-top: 30px;
   margin-left: auto;
   margin-right: auto;
-  /* width: 35%;
-  min-width: 350px; */
   width: 80%;
   max-width: 700px;
   height: 80px;
   box-shadow: 0 5px 16px rgba(0, 0, 0, 0.2);
-  background: #1D1F20;
-  color: #BF211E;
+  background: var(--dark-background);
+  color: var(--error);
   position: relative;
   z-index: 100;
-  border: 2px solid #BF211E;
+  border: 2px solid var(--error);
   border-radius: 10px;
 
   display: flex;
@@ -37,7 +35,7 @@ const ModalContent = styled.div`
   flex-direction: column;
   padding: 5px 50px 0px 15px;
   line-height: 1.8;
-  color: #F8F9FA;
+  color: var(--highlighted-text);
   z-index: 100;
   width: 100%;
 `;

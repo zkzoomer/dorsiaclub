@@ -7,13 +7,6 @@ import {
 import {
     FooterContainer,
     FooterWrap,
-    /* FooterLink,
-    FooterLinksContainer,
-    FooterLinksWrapper,
-    FooterLinkItems,
-    FooterLinkTitle,
-    FooterLogo,
-    WebsiteRights, */
     SocialMedia,
     SocialMediaWrap,
     SocialIcons,

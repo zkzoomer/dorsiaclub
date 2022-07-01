@@ -2,13 +2,13 @@ import styled from 'styled-components';
 import {DropdownButton} from 'react-bootstrap';
 
 export const PageContainer = styled.div`
-    background-color: #212529;
+    background-color: var(--light-background);
     min-height: 101vh;
 `
 
 export const TokenContainer = styled.div`
     height: 100%;
-    background: #212529;
+    background: var(--light-background);
 
     @media screen and (max-width: 768px) {
         height: auto;
@@ -22,7 +22,7 @@ export const TokenContainer = styled.div`
 export const TokenH1 = styled.h1`
     padding-top: 125px;
     font-size: 2.5rem;
-    color: #fff;
+    color: var(--highlighted-text);
     margin-bottom: 40px;
     align-items: center;
     text-align: center;
@@ -143,6 +143,7 @@ export const VerticalSeparationBar = styled.div`
     border-left: 1px solid white;
     height: 30px;
     left: 50%;
+    color: var(--highlighted-text);
 `
 
 const activeClassName = 'active';
@@ -150,7 +151,7 @@ const activeClassName = 'active';
 export const OptionsButton = styled.button.attrs({
     activeClassName,
 })`
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     color: white;
     border: none;
     background: none;
@@ -158,21 +159,22 @@ export const OptionsButton = styled.button.attrs({
     padding-left: 20px;
     padding-right: 20px;
     font-weight: 200;
+    color: var(--highlighted-text);
     font-family: 'Royal-Script', serif;
     
 
     &:hover {
-        font-weight: 1000;
+        font-weight: bold;
     }
 
     &.${activeClassName} {
-        font-weight: 1000;
+        font-weight: bold;
     }
 `
 
 export const AttributeWrapper = styled.div`
     top: 0;
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     height: 100%;
 
     @media screen and (max-width: 768px) {
@@ -188,16 +190,18 @@ export const AttributeItem = styled.div`
 
 export const AttributeText = styled.span`
     font-family: 'Royal-Script', serif;
+    color: var(--main-text)
 `
 
 export const BoldText = styled.span`
-    font-weight: bold;
     font-family: 'Royal-Script', serif;
+    color: var(--highlighted-text);
+    font-weight: bold;
 `
 
 export const DividerLine = styled.hr`
-    color: '#E9ECEF';
-    background-color: '#E9ECEF';
+    color: var(--main-text);
+    background-color: var(--main-text);
     height: 1px;
     width: 60%;
     justify-self: left;
@@ -236,10 +240,10 @@ export const EnabledButton = styled.button`
     justify-content: center;
     align-items: center;
     border-radius: 50px;
-    background: #E6C229;
+    background: var(--button);
     white-space: nowrap;
     padding: 14px 48px;
-    color: #010606;
+    color: var(--button-text);
     font-size: 16px;
     outline: none;
     border: none;
@@ -250,8 +254,8 @@ export const EnabledButton = styled.button`
 
     &:hover {
         transition: all 0.3s ease-in-out;
-        color: #F8F9FA;
-        box-shadow:  0 0 0 2px #F8F9FA;
+        color: var(--highlighted-text);
+        box-shadow:  0 0 0 2px var(--highlighted-text);
     }
 `
 
@@ -260,10 +264,10 @@ export const DisabledButton = styled.button`
     justify-content: center;
     align-items: center;
     border-radius: 50px;
-    background: #927A11;
+    background: var(--disabled-button);
     white-space: nowrap;
     padding: 14px 48px;
-    color: #010606;
+    color: var(--button-text);
     font-size: 16px;
     outline: none;
     border: none;

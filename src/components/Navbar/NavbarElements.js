@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { NavLink } from 'react-router-dom'
 
 export const DorsiaNav = styled.nav`
-    background: ${({scrollNav}) => (scrollNav ? '#1D1F20' : 'transparent')};
+    background: ${({scrollNav}) => (scrollNav ? 'var(--dark-background)' : 'transparent')};
     transition: 0.5s all ease;
     max-height: 80px;
     margin-top: -80px;
@@ -28,7 +28,7 @@ export const NavbarContainer = styled.div`
 `;
 
 export const NavLogo = styled(NavLink)`
-    color: #E9ECEF;
+    color: var(--main-text);
     justify-self: flex-start;
     cursor: pointer;
     font-size: 1.5rem;
@@ -41,7 +41,7 @@ export const NavLogo = styled(NavLink)`
     font-family: 'Bookman-Type', serif;
 
     &:hover {
-        color: #F8F9FA;
+        color: var(--highlighted-text);
     }
 
     @media screen and (max-width: 820px) {
@@ -61,7 +61,7 @@ export const MobileIcon = styled.div`
         left: 10px;
         font-size: 1.8rem;
         cursor: pointer;
-        color: #E9ECEF;
+        color: var(--main-text);
     }
 `;
 
@@ -90,7 +90,7 @@ const activeclassname = 'active';
 export const NavLinks = styled(NavLink).attrs({
     activeclassname,
 })`
-    color: #E9ECEF;
+    color: var(--main-text);
     display: flex;
     align-items: center;
     
@@ -102,8 +102,8 @@ export const NavLinks = styled(NavLink).attrs({
     font-size: 1rem;
     
     &.${activeclassname} {
-        color: #F8F9FA;
-        border-bottom: 1px solid #F8F9FA;
+        color: var(--highlighted-text);
+        border-bottom: 1px solid var(--highlighted-text);
         padding-top:0;
     }
 
@@ -113,18 +113,18 @@ export const NavLinks = styled(NavLink).attrs({
         left: 0;
         top: 100%;
         width: 0;
-        background-color: #F8F9FA;
+        background-color: var(--highlighted-text);
         transition: width .3S ease-in-out;
     }
 
     &:hover:after {
-        border-bottom: 1px solid #F8F9FA;
+        border-bottom: 1px solid var(--highlighted-text);
         width: 100%;
         padding-top:0;
     }
 
     &:hover {
-        color: #F8F9FA;
+        color: var(--highlighted-text);
     }
 `;
 
@@ -135,7 +135,7 @@ export const NavWalletBtn = styled.nav`
     white-space: nowrap;
     margin-right: 10px;
     padding: 10px 20px;
-    color: #F8F9FA;
+    color: var(--main-text);
     font-size: 16px;
     outline: none;
     border: none;
@@ -145,7 +145,8 @@ export const NavWalletBtn = styled.nav`
     position: relative;
 
     &:hover {
-        box-shadow:  0 0 0 2px #F8F9FA;
+        box-shadow:  0 0 0 2px var(--highlighted-text);
+        color: var(--highlighted-text);
     }
 `
 
@@ -153,16 +154,20 @@ export const BtnContents = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
+
+    &:hover {
+        color: var(--highlighted-text);
+    }
 `
 
 export const NavWalletBtnWrong = styled.nav`
     width: 180px;
     border-radius: 50px;
-    background: #BF211E ;
+    background: var(--error);
     white-space: nowrap;
     margin-right: 10px;
     padding: 10px 20px;
-    color: #F8F9FA;
+    color: var(--highlighted-text);
     font-size: 16px;
     outline: none;
     border: none;
@@ -172,7 +177,7 @@ export const NavWalletBtnWrong = styled.nav`
     position: relative;
 
     &:hover {
-        box-shadow:  0 0 0 2px #F8F9FA;
+        box-shadow:  0 0 0 2px var(--highlighted-text);
     }
 `
 
@@ -180,7 +185,11 @@ export const NavWalletBtnText = styled.nav`
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #F8F9FA;
+    color: var(--main-text);
+
+    &:hover {
+        color: var(--highlighted-text);
+    }
 `
 
 export const NavBtn = styled.nav`
@@ -192,10 +201,10 @@ export const NavBtn = styled.nav`
 
 export const NavBtnLink = styled(NavLink)`
     border-radius: 50px;
-    background: #F8F9FA;
+    background: var(--highlighted-text);
     white-space: nowrap;
     padding: 10px 22px;
-    color: #F8F9FA;
+    color: var(--highlighted-text);
     font-size: 16px;
     outline: none;
     border: none;

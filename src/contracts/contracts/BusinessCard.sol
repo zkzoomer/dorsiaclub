@@ -4,25 +4,25 @@
 
 pragma solidity ^0.8.0;
 
-import "./Context.sol";
-import "./ERC165.sol";
-import "./IERC721.sol";
-import "./IERC721Metadata.sol";
-import "./IERC721Enumerable.sol";
-import "./IERC721Receiver.sol";
 import "./BusinessCardUtils.sol";
-import "./SafeMath.sol";
-import "./Address.sol";
-import "./Strings.sol";
-import "./EnumerableSet.sol";
-import "./EnumerableMap.sol";
-import "./Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/interfaces/IERC721.sol";
+import "@openzeppelin/contracts/interfaces//IERC721Enumerable.sol";
+import "@openzeppelin/contracts/interfaces//IERC721Metadata.sol";
+import "@openzeppelin/contracts/interfaces//IERC721Receiver.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/introspection//ERC165Storage.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
  * @dev see https://eips.ethereum.org/EIPS/eip-721
  */
-contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ownable {
+contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumerable, Ownable {
     using SafeMath for uint256;
     using Address for address;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -99,21 +99,31 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     uint256 public constant maxSupply = 1111;
     bool public saleStarted;
 
-    // Business card struct
-    // Name and position are stored in whatever case the user gave
-    struct Card {
-        uint256 genes;
-        string name;
-        string position;
-    }
-
     // Random nonce for generating genes
     uint256 randNonce = 0;
 
-    // Mapping from token ID to card struct
+    struct Card {
+        uint256 genes;
+        string name;
+    }
+
+    // Mapping from token ID to genes
     mapping (uint256 => Card) private _tokenStats;
     // Mapping for reserved names, reserved names are stored in lowercase
     mapping (string => bool) private _nameReserved;
+
+    // Values sent in the event when minting / updating a card
+    // All the metadata attributes that do NOT get stored on chain
+    struct CardProperties {
+        string position;
+        string twitterAccount;
+        string telegramAccount;
+        string telegramGroup;
+        uint256 discordAccount;
+        string discordGroup;
+        string githubUsername;
+        string website;
+    }
 
     // Default URI
     string private _defaultURI;
@@ -127,16 +137,13 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     uint256 public _mintPrice = 0.1 ether;
     // Token URI update price
     uint256 public _updatePrice = 0.05 ether;
-    // Oracle update transaction gas price, 0.015 AVAX
+    // Oracle update transaction gas price
     uint256 public _oraclePrice = 0.015 ether;
 
     // Oracle related events
-    event NewServerOracleEvent(address serverOracle);
-    event NewRequestEvent(uint256 tokenId, string name, string position, uint256 genes);
-    event TokenURIUpdatedEvent(uint256 tokenId, string tokenURI);
-    
-    // Price update events
-    event NewUpdatePriceEvent(uint256 newUpdatePrice);
+    event UpdateRequest(uint256 tokenId, uint256 genes, string name, CardProperties cardProperties);
+    event SwapRequest(uint256 tokenId1, uint256 tokenId2, uint256 genes1, uint256 genes2);
+    event TokenURIUpdated(uint256 tokenId, string tokenURI);
 
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection, and defining base and default URIs.
@@ -163,7 +170,6 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     function setOracle(address _serverOracle) external onlyOwner {
         require(_serverOracle != address(0)); // dev: cannot set the oracle to the zero address
         serverOracle = _serverOracle;
-        emit NewServerOracleEvent(serverOracle);
     }
 
     /**
@@ -172,7 +178,6 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     function modifyUpdatePrice(uint256 newUpdatePrice) external onlyOwner {
         require(newUpdatePrice >= _oraclePrice); // dev: Update price must always cover the gas costs of running the oracle
         _updatePrice = newUpdatePrice;
-        emit NewUpdatePriceEvent(_updatePrice);
     }
 
     /**
@@ -186,7 +191,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev Calls the oracle to update a certain token URI with the newly defined Card struct
      */
-    function _updateTokenURI(uint256 _tokenId) internal {
+    function _updateTokenURI(uint256 _tokenId, CardProperties calldata _cardProperties) internal {
         require(_exists(_tokenId), "Token does not exist");
         require(saleStarted == true, "Updates paused");
         // Calls for updating the token can only be made if it is not being processed already
@@ -195,7 +200,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
         // Fund the server oracle with enough funds for the URI update transaction
         payable(serverOracle).transfer(_oraclePrice);
         // Emit event to be catched by the server oracle running off-chain
-        emit NewRequestEvent(_tokenId, _tokenStats[_tokenId].name, _tokenStats[_tokenId].position, _tokenStats[_tokenId].genes);
+        emit UpdateRequest(_tokenId, _tokenStats[_tokenId].genes, _tokenStats[_tokenId].name, _cardProperties);
     }
 
     /**
@@ -206,18 +211,18 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
         require(requests[_tokenId]); // dev: Request not in pending list
         _setTokenURI(_tokenId, _tokenURI);
         delete requests[_tokenId];
-        emit TokenURIUpdatedEvent(_tokenId, _tokenURI);
+        emit TokenURIUpdated(_tokenId, _tokenURI);
      }
 
      /**
      * @dev Mints a new NFT Business Card
      */
-    function getCard(string memory _cardName, string memory _cardPosition) public payable {
+    function getCard(string calldata _cardName, CardProperties calldata _cardProperties) public payable {
         require(saleStarted == true, "Sale not started or paused");
         require(totalSupply() < maxSupply, "Sale has ended");
         require(msg.value >= _mintPrice, "Value sent is below the price");
         // Minting a new NFT with the name and position provided
-        _safeMint(_msgSender(), totalSupply() + 1, _cardName, _cardPosition);
+        _safeMint(_msgSender(), totalSupply() + 1, _cardName, _cardProperties);
     }
 
     /**
@@ -230,14 +235,14 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
      *
      * Emits a {Transfer} event.
      */
-    function _safeMint(address _to, uint256 _tokenId, string memory _cardName, string memory _cardPosition) internal virtual {
+    function _safeMint(address _to, uint256 _tokenId, string calldata _cardName, CardProperties calldata _cardProperties) internal virtual {
         require(
             BusinessCardUtils.validateName(_cardName) &&
             isNameReserved(_cardName) == false, 
             "Name taken or not valid"
         );
         require(
-            BusinessCardUtils.validatePosition(_cardPosition), 
+            BusinessCardUtils.validatePosition(_cardProperties.position), 
             "Position not valid"
         );
 
@@ -248,9 +253,9 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
         
         // Generating a new card
         toggleReserveName(_cardName, true);
-        _tokenStats[_tokenId] = Card(genes, _cardName, _cardPosition);
-        _safeMint(_to, _tokenId, abi.encodePacked(_cardName, _cardPosition, genes));
-        _updateTokenURI(_tokenId);
+        _tokenStats[_tokenId] = Card(genes, _cardName);
+        _safeMint(_to, _tokenId, abi.encodePacked(_cardName, _cardProperties.position, genes));
+        _updateTokenURI(_tokenId, _cardProperties);
     }
 
     /**
@@ -267,7 +272,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
      * Whenever such change is made, it is first immediately reflected in the Card struct, and in the metadata after oracle updates.
      * User can change both name and position, just the name, or just the position (by leaving those inputs empty)
      */
-    function changeNameAndOrPosition(uint256 tokenId, string memory newName, string memory newPosition) public payable {
+    function updateCard(uint256 tokenId, string calldata newName, CardProperties calldata newCardProperties) public payable {
         
         require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved");
         require(
@@ -281,9 +286,9 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
             "Name taken or not valid"
         );
         require(
-            bytes(newPosition).length == 0
+            bytes(newCardProperties.position).length == 0
             ||
-            BusinessCardUtils.validatePosition(newPosition) == true
+            BusinessCardUtils.validatePosition(newCardProperties.position) == true
             , 
             "Position not valid"
         );
@@ -301,14 +306,9 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
             // Changing the token name
             _tokenStats[tokenId].name = newName;
         }
-        // Only change position if specified
-        if (bytes(newPosition).length > 0) {
-            _tokenStats[tokenId].position = newPosition;
-        }
-        // This means user can prompt oracle to change the card, but not really change anything -- same update that incurs a cost
 
         // Make new tokenURI update request
-        _updateTokenURI(tokenId);
+        _updateTokenURI(tokenId, newCardProperties);
     }
 
     /**
@@ -316,32 +316,38 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
      * This is to give customers the ability to directly shuffle name and positions of their
      * cards, and prevent possible "name snipers"
      */
-    function swapNameAndPosition(uint256 tokenId1, uint256 tokenId2) public payable {
+    function swapCards(uint256 tokenId1, uint256 tokenId2) public payable {
         require(
             _isApprovedOrOwner(_msgSender(), tokenId1) &&
             _isApprovedOrOwner(_msgSender(), tokenId2), 
             "Caller is not owner nor approved"
         );
         require(msg.value >= _updatePrice, "Value sent is below the price");
+        require(saleStarted == true, "Updates paused");
+        // Calls for updating the token can only be made if it is not being processed already
+        require(requests[tokenId1] == false && requests[tokenId2] == false, "Update being processed");
 
-        // Swapping names and positions
+        // Swapping names between tokens
         string memory name1 = _tokenStats[tokenId1].name;
-        string memory position1 = _tokenStats[tokenId1].position;
         _tokenStats[tokenId1].name = _tokenStats[tokenId2].name;
-        _tokenStats[tokenId1].position = _tokenStats[tokenId2].position;
         _tokenStats[tokenId2].name = name1;
-        _tokenStats[tokenId2].position = position1;
 
-        // Make new tokenURI update requests
-        _updateTokenURI(tokenId1);
-        _updateTokenURI(tokenId2);
+        // Request now pending
+        requests[tokenId1] = true;
+        requests[tokenId1] = true;
+
+        // Emitting a single swap request to the oracle -- processed differently
+        emit SwapRequest(tokenId1, tokenId2, _tokenStats[tokenId1].genes, _tokenStats[tokenId2].genes);
+
+        // Fund the server oracle with enough funds for the URI update transaction
+        payable(serverOracle).transfer(_oraclePrice);
     }
 
     /**
      * @dev Updates the tokenURI, intented to be used only when oracle fails to update a tokenURI
      */
-    function updateTokenURI(uint256 tokenId) external onlyOwner {
-        _updateTokenURI(tokenId);
+    function updateTokenURI(uint256 tokenId, CardProperties calldata _cardProperties) external onlyOwner {
+        _updateTokenURI(tokenId, _cardProperties);
     }
 
     /**
@@ -402,7 +408,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
     /**
      * @dev For setting the default URI for all tokenId's. 
      */
-    function setDefaultURI(string memory newDefaultURI) external onlyOwner {
+    function setDefaultURI(string calldata newDefaultURI) external onlyOwner {
         require(bytes(newDefaultURI).length > 0, "Cannot be set to empty string");
         _defaultURI = newDefaultURI;
     }
@@ -411,7 +417,7 @@ contract BusinessCard is ERC165, IERC721, IERC721Metadata, IERC721Enumerable, Ow
      * @dev Returns if the name has been reserved.
      * Name reservation checks are made in lowercase
      */
-    function isNameReserved(string memory nameString) public view returns (bool) {
+    function isNameReserved(string calldata nameString) public view returns (bool) {
         return _nameReserved[BusinessCardUtils.toLower(nameString)];
     }
 

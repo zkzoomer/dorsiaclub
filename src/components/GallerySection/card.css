@@ -6,11 +6,11 @@
 }
 
 .bg-custom {
-    background-color: #1D1F20 !important;
+    background-color: var(--dark-background) !important;
 }
 
 .text-custom {
-    color: #F8F9FA;
+    color: var(--main-text);
 }
 
 .card:hover {

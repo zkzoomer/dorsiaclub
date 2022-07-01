@@ -3,21 +3,21 @@ import styled from 'styled-components'
 import { FaAngleUp } from "react-icons/fa";
 
 export const DividerWrapper = styled.div`
-    background-color: #212529;
+    background-color: var(--light-background);
     height: 1px;
     width: 100%;
     margin: auto;
 `
 
 export const DividerLine = styled.hr`
-    color: #6C757D;
+    color: var(--divider);
     height: 1px;
     width: 80%;
     margin: auto;
 `
 
 export const QuestionsContainer = styled.div`
-    background: #212529;
+    background: var(--light-background);
 
     @media screen and (max-width: 820px) {
         padding: 100px 0;
@@ -101,13 +101,13 @@ export const AccordionContainer = styled.div`
     overflow: hidden;
     width: 100%;
     border-radius: 0.5rem;
-    color: #f9f9f9;
+    color: var(--highlighted-text);
 `
 
 export const Inner = styled.div`
     position: absolute;
     padding: 1rem;
-    color: #E9ECEF;
+    color: var(--highlighted-text);
     font-family: 'Royal-Script', serif;
     font-size: 18px;
     padding-left: 30px;
@@ -123,14 +123,17 @@ export const Header = styled.button`
     font-size: 25px;
     font-family: 'Royal-Script', serif;
     text-align: left;
-    background: #212529;
+    background: var(--light-background);
     color: inherit;
     cursor: pointer;
+    transition: all 0.2s;
+    color: ${props => props.isActive ? 'var(--highlighted-text)' : 'var(--main-text)'};
 `
 
 export const HeaderIcon = styled.span`
     transform: rotate(${props => props.isActive ? -180 : 0 }deg);
     transition: all 0.2s;
+    color: var(--main-text);
 `
 
 export const Content = styled.div`
@@ -146,7 +149,7 @@ export const Content = styled.div`
 export const AccordionContent = ({onClick, itemName, itemContent, isActive}) => {
     return(
         <>
-            <Header onClick={onClick}>
+            <Header isActive={isActive} onClick={onClick}>
                 {itemName}
                 <HeaderIcon isActive={isActive} className='material-icons'>
                     <FaAngleUp />

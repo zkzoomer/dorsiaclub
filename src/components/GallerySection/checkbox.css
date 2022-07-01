@@ -1,9 +1,13 @@
+.form-check-input {
+    transition: all 0.2s ease-in-out;
+}
+
 .form-check-input:checked {
-    background-color: #E6C229 !important;
-    border-color: #927A11 !important;
+    background-color: var(--button) !important;
+    border-color: var(--button) !important;
 }
 
 
 .form-check-label {
-    color: #F8F9FA !important;
+    color: var(--main-text) !important;
 }

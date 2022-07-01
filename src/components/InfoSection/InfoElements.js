@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import {Link} from 'react-router-dom'
 
 export const InfoContainer = styled.div`
-    background: #212529;
+    background: var(--light-background);
 
     @media screen and (max-width: 820px) {
         padding: 100px 0;
@@ -34,14 +34,14 @@ export const InfoRow = styled.div`
 `
 
 export const DividerWrapper = styled.div`
-    background-color: #212529;
+    background-color: var(--light-background);
     height: 1px;
     width: 100%;
     margin: auto;
 `
 
 export const DividerLine = styled.hr`
-    color: #6C757D;
+    color: var(--divider);
     height: 1px;
     width: 80%;
     margin: auto;
@@ -49,7 +49,6 @@ export const DividerLine = styled.hr`
 
 
 export const Column1 = styled.div`
-    /* margin-top: -60px; */
     padding: 0 15px;
     grid-area: col1;
     height: 63%;
@@ -95,7 +94,6 @@ export const TextWrapper = styled.div`
 `
 
 export const TopLine = styled.p`
-    color: #01bf71;
     font-size: 16px;
     line-height: 16px;
     font-weight: 700;
@@ -105,7 +103,7 @@ export const TopLine = styled.p`
 `
 
 export const Heading = styled.h1`
-    color: #E9ECEF;
+    color: var(--main-text);
     margin-bottom: 16px;
     font-size: 40px;
     line-height: 1.1;
@@ -116,7 +114,7 @@ export const Heading = styled.h1`
 `
 
 export const Subtitle = styled.p`
-    color: #E9ECEF;
+    color: var(--main-text);
     margin-top: 40px;
     margin-bottom: 35px;
     max-width: 400px;
@@ -137,10 +135,10 @@ export const BtnWrap = styled.div`
 
 export const InfoButton = styled(Link)`
     border-radius: 50px;
-    background: #E6C229;
+    background: var(--button);
     white-space: nowrap;
     padding: 14px 48px;
-    color: #010606;
+    color: var(--button-text);
     font-size: 16px;
     outline: none;
     border: none;
@@ -151,7 +149,7 @@ export const InfoButton = styled(Link)`
 
     &:hover {
         transition: all 0.3s ease-in-out;
-        color: #F8F9FA;
-        box-shadow:  0 0 0 2px #F8F9FA;
+        color: var(--highlighted-text);
+        box-shadow:  0 0 0 2px var(--highlighted-text);
     }
 `

@@ -114,7 +114,9 @@ class ListeningOracle():
             f.close()
 
         # Starting nonce, program will add to it sequentially
+        print('getting noncè')
         self.nonce = self.web3.eth.get_transaction_count(self.addy, "pending")
+        print('nonce gottten')
 
     # https://cryptomarketpool.com/how-to-listen-for-ethereum-events-using-web3-in-python/
 
@@ -259,15 +261,15 @@ class ListeningOracle():
 if __name__ == '__main__':
     processingIds = '0123456789'
 
-    with open('./doc/GETBLOCK_API.json') as f:
+    with open('doc/ENDPOINT_API.json') as f:
         data = json.load(f)
-        getblock_key = data['GETBLOCK_API_KEY']
+        key = data['API_KEY']
         f.close()
 
     # MATIC testnet
     cardContract = {
         "addy": '0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d',
-        "provider": "wss://matic.getblock.io/testnet/?api_key=" + getblock_key,
+        "provider": "wss://speedy-nodes-nyc.moralis.io/{}/polygon/mumbai/ws".format(key),
         "kind": "WS"
     }
     start_block_file = "./doc/start_block.txt"

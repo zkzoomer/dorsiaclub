@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.15",
-    "hardhat": "^2.9.1"
+    "hardhat": "^2.9.9"
   },
   "overrides": {
     "autoprefixer": "10.4.5"

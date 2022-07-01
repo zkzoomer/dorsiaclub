@@ -3,7 +3,6 @@ import { MdKeyboardArrowRight, MdArrowForward } from 'react-icons/md';
 import { Link } from 'react-router-dom'
 
 export const HeroContainer = styled.div`
-    background: #0c0c0c;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -66,7 +65,7 @@ export const HeroContent = styled.div`
 `
 
 export const HeroH1 = styled.h1`
-    color: #E9ECEF;
+    color: var(--highlighted-text);
     font-size: 48px;
     text-align: center;
 
@@ -81,7 +80,7 @@ export const HeroH1 = styled.h1`
 
 export const HeroP = styled.p`
     margin-top: 24px;
-    color: #E9ECEF;
+    color: var(--highlighted-text);
     font-size: 24px;
     text-align: center;
     max-width: 600px;
@@ -114,10 +113,10 @@ export const ArrowRight = styled(MdKeyboardArrowRight)`
 
 export const Button = styled(Link)`
     border-radius: 50px;
-    background: #E6C229;
+    background: var(--button);
     white-space: nowrap;
     padding: 14px 48px;
-    color: #010606;
+    color: var(--button-text);
     font-size: 16px;
     outline: none;
     border: none;
@@ -127,7 +126,7 @@ export const Button = styled(Link)`
 
     &:hover {
         transition: all 0.3s ease-in-out;
-        color: #F8F9FA;
-        box-shadow:  0 0 0 2px #F8F9FA;
+        color: var(--highlighted-text);
+        box-shadow:  0 0 0 2px var(--highlighted-text);
     }
 `

@@ -6,7 +6,7 @@ export const PageContainer = styled.div`
 
 export const Page = styled.div`
     height: 100%;
-    background: #212529;
+    background: var(--light-background);
 
     @media screen and (max-width: 768px) {
         overflow-x: hidden;
@@ -19,7 +19,7 @@ export const Page = styled.div`
 export const NotFoundTitle = styled.h1`
     padding-top: 150px;
     font-size: 5rem;
-    color: #F8F9FA;
+    color: var(--highlighted-text);
     margin-bottom: 100px;
     align-items: center;
     text-align: center;
@@ -41,7 +41,7 @@ export const NotFoundTitle = styled.h1`
 
 export const NotFoundSubtitle = styled.h2`
     font-size: 2.5rem;
-    color: #F8F9FA;
+    color: var(--highlighted-text);
     margin-bottom: 100px;
     align-items: center;
     text-align: center;

@@ -11,7 +11,7 @@ library BusinessCardUtils {
      * Alphanumeric and spaces without leading or trailing space, with maximum characters
      * Must contain at most one space, ensuring a Name SURNAME input.
      */
-    function validateName(string memory str) internal pure returns (bool) {
+    function validateName(string calldata str) internal pure returns (bool) {
         bytes memory b = bytes(str);
         // String length requirements
         if(b.length == 0) return false;
@@ -30,7 +30,7 @@ library BusinessCardUtils {
      * @dev Check if the position string is valid:
      * Alphanumeric and spaces without leading or trailing space, with maximum characters
      */
-    function validatePosition(string memory str) internal pure returns (bool) {
+    function validatePosition(string calldata str) internal pure returns (bool) {
         bytes memory b = bytes(str);
         // String length requirements
         if(b.length == 0) return false;
@@ -48,7 +48,7 @@ library BusinessCardUtils {
     /**
      * @dev Validates that string contains valid characters, alphanumerical and some special symbols
      */
-    function validateString(string memory str) internal pure returns (bool) {
+    function validateString(string calldata str) internal pure returns (bool) {
         bytes memory b = bytes(str);
         bytes1 lastChar = b[0];
 

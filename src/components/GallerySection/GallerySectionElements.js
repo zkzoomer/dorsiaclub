@@ -3,8 +3,9 @@ import { DropdownButton } from 'react-bootstrap';
 
 export const PageContainer = styled.div`
     min-height: 101vh;
-    background: #212529;
-    color: #F8F9FA;
+    background: var(--light-background);
+    /* background: linear-gradient(to right, var(--light-background), var(--transition-background)); */
+    color: var(--main-text);
     display: flex; 
     flex-direction: column;
     align-items: center;
@@ -58,6 +59,11 @@ export const SwitchRow = styled.div`
     display: flex;
     justify-content: space-between;
     width: 400px;
+
+    @media screen and (max-width: 1000px) {
+        height: 80px;
+        display: grid;
+    }
 `
 
 export const SwitchContainer = styled.div`
@@ -68,7 +74,7 @@ export const SwitchContainer = styled.div`
 `
 
 export const DividerWrapper = styled.div`
-    background-color: #212529;
+    background-color: var(--light-background);
     height: 1px;
     width: 100%;
     margin: auto;
@@ -76,7 +82,7 @@ export const DividerWrapper = styled.div`
 `
 
 export const DividerLine = styled.hr`
-    color: #F8F9FA;
+    color: var(--divider);
     height: 1px;
     margin: auto;
 `

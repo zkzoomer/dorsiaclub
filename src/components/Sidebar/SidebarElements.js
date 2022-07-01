@@ -7,7 +7,7 @@ export const SidebarContainer = styled.aside`
     z-index: 999;
     width: 50%;
     height: 100%;
-    background: #495057;
+    background: var(--light-background-3);
     display: grid;
     align-items: center;
     top: 0;
@@ -18,7 +18,7 @@ export const SidebarContainer = styled.aside`
 `;
 
 export const CloseIcon = styled(FaTimes)`
-    color: #F8F9FA;
+    color: var(--highlighted-text);
 `;
 
 export const Icon = styled.div`
@@ -32,7 +32,7 @@ export const Icon = styled.div`
 `;
 
 export const SidebarWrapper = styled.div`
-    color: #F8F9FA;
+    color: var(--highlighted-text);
 `;
 
 export const SidebarMenu = styled.ul`
@@ -60,14 +60,10 @@ export const SidebarLink = styled(NavLink).attrs({
     list-style: none;
     transition: 0.2s ease-in-out;
     text-decoration: none;
-    color: #F8F9FA;
+    color: var(--highlighted-text);
     cursor: pointer;
     margin: center;
     border-bottom: 1px white;
-    
-    &:hover{
-        color: #F8F9FA;
-    }
 
     &.${activeclassname} {
         padding-left: 50px;
@@ -75,21 +71,11 @@ export const SidebarLink = styled(NavLink).attrs({
 `
 
 export const SidebarDividerWrapper = styled.div`
-    background-color: #212529;
+    background-color: var(--light-background);
     height: 1px;
     width: 100%;
     margin: auto;
 
-`
-
-export const SidebarDividerLine = styled.hr`
-    color: '#fff';
-    background-color: '#fff';
-    height: 1px;
-    width: 60%;
-    margin-left: auto;
-    margin-right: auto;
-    
 `
 
 export const SideBtnWrap = styled.div`
@@ -99,10 +85,10 @@ export const SideBtnWrap = styled.div`
 
 export const SidebarRoute = styled(NavLink)`
     border-radius: 50px;
-    background: #212529;
+    background: var(--light-background);
     white-space: nowrap;
     padding: 16px 64px;
-    color: #010606;
+    color: var(--button-text); 
     font-size: 16px;
     outline: none;
     border: none;
@@ -112,7 +98,5 @@ export const SidebarRoute = styled(NavLink)`
 
     &:hover {
         transition: all 0.2s ease-in-out;
-        background: #212529;
-        color: #010606;
     }
 `

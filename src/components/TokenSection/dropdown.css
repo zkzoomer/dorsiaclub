@@ -7,8 +7,8 @@
   justify-content: center;
   align-items: center;
   font-family: 'Royal-Script', serif;
-  background-color: #1D1F20 !important;
-  border-color: #1D1F20 !important;
+  background-color: var(--dark-background) !important;
+  border-color: var(--dark-background) !important;
 }
 
 .dropdown-menu {
@@ -19,12 +19,16 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font-family: 'Royal-Script', serif;
-  background-color: #F8F9FA !important;
-  color: #1D1F20 m !important;
+  background-color: var(--highlighted-text) !important;
+  color: var(--dark-background) !important;
 }
 
 .dropdown-item {
   font-family: 'Royal-Script', serif;
+}
+
+.text-custom {
+  color: var(--main-text) !important;
 }
 
 

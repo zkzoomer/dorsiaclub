@@ -1,13 +1,13 @@
 import styled from 'styled-components'
 
 export const PageContainer = styled.div`
-    background-color: #212529;
+    background-color: var(--light-background);
     min-height: 101vh;
 `
 
 export const MintContainer = styled.div`
     height: 100%;
-    background-color: #212529;
+    background-color: var(--light-background);
 
     @media screen and (max-width: 768px) {
         overflow-x: hidden;
@@ -32,7 +32,7 @@ export const HeadingWrapper = styled.div`
 export const MintH1 = styled.h1`
     padding-top: 150px;
     font-size: 2.5rem;
-    color: #E9ECEF;
+    color: var(--main-text);
     margin-bottom: 100px;
     align-items: center;
     text-align: center;
@@ -59,11 +59,6 @@ export const InfoWrapper = styled.div`
     padding-right: 30px;
     margin-left: auto;
     margin-right: auto;
-
-    @media screen and (max-width: 768px) {
-        /* margin-left: 30px;
-        margin-right: 30px; */
-    }
 `
 
 export const InfoRow = styled.div`
@@ -77,27 +72,10 @@ export const InfoRow = styled.div`
     };
 `
 
-export const DividerWrapper = styled.div`
-    background-color: #000;
-    height: 1px;
-    width: 100%;
-    margin: auto;
-`
-
-export const DividerLine = styled.hr`
-    color: '#fff';
-    background-color: '#fff';
-    height: 1px;
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-`
-
-
 export const Column1 = styled.div`
     height: 100%;
     grid-area: col1;
-    color: #E9ECEF;
+    color: var(--main-text);
     padding-top: 15%;
     margin-bottom: 15px;
 
@@ -112,16 +90,6 @@ export const Column2 = styled.div`
     grid-area: col2;
 `
 
-export const TopLine = styled.p`
-    color: #01bf71;
-    font-size: 16px;
-    line-height: 16px;
-    font-weight: 700;
-    letter-spacing: 1.4px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-`
-
 export const ImgWrap = styled.div`
     position: relative;
     max-width: 1000px;
@@ -129,7 +97,7 @@ export const ImgWrap = styled.div`
 `
 
 export const ImgDescription = styled.h1`   
-    color: white;
+    color: var(--main-text);
     font-size: 1rem;
     margin-top: 0px;
     height: 40px;
@@ -152,7 +120,7 @@ export const ImgLiveName = styled.h1`
     left: 0;
     right: 0;
     bottom: 55.5%;
-    color: #1D1F20;
+    color: var(--dark-background);
     font-size: 21.2px;
     justify-content: center;
     align-items: center;
@@ -178,7 +146,7 @@ export const ImgLivePosition = styled.div`
     left: 0;
     right: 0;
     bottom: 52.5%;
-    color: #1D1F20;
+    color: var(--dark-background);
     font-size: 14px;
     justify-content: center;
     align-items: center;
@@ -218,10 +186,10 @@ export const EnabledButton = styled.button`
     justify-content: center;
     align-items: center;    
     border-radius: 50px;
-    background: #E6C229;
+    background: var(--button);
     white-space: nowrap;
     padding: 14px 48px;
-    color: #010606;
+    color: var(--button-text);
     font-size: 16px;
     outline: none;
     border: none;
@@ -232,8 +200,8 @@ export const EnabledButton = styled.button`
 
     &:hover {
         transition: all 0.3s ease-in-out;
-        color: #F8F9FA;
-        box-shadow:  0 0 0 2px #F8F9FA;
+        color: var(--highlighted-text);
+        box-shadow:  0 0 0 2px var(--highlighted-text);
     }
 `
 
@@ -242,10 +210,10 @@ export const DisabledButton = styled.button`
     justify-content: center;
     align-items: center;
     border-radius: 50px;
-    background: #927A11;
+    background: var(--disabled-button);
     white-space: nowrap;
     padding: 14px 48px;
-    color: #010606;
+    color: var(--button-text);
     font-size: 16px;
     outline: none;
     border: none;

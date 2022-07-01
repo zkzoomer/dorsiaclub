@@ -59,7 +59,7 @@ const Navbar = (props) => {
 
     return (
         <>
-            <IconContext.Provider value={{ color: '#fff' }}>
+            <IconContext.Provider value={{ color: 'var(--main-text)' }}>
                 <DorsiaNav scrollNav={scrollNav}>
                     <NavbarContainer>
                         <NavLogo to='/' onClick={toggleHome}>Dorsia Club</NavLogo>

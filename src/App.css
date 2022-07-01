@@ -5,6 +5,25 @@
   font-family: 'Bookman-Type', serif;
 }
 
+:root {
+  --main-text: #E9ECEF;
+  --highlighted-text: #F8F9FA;
+  --sub-text: #DEE2E6;
+  --dark-background: #1D1F20;
+  --light-background: #212529;
+  --light-background-2: #343A40;
+  --light-background-3: #495057;
+  --transition-background: #212529;
+  --divider: #C0C0C0;
+  --button: #E6C229;
+  --button-alt: #E1BC1A;
+  --disabled-button: #CFAE18;
+  --button-text: #010606;
+  --error: #BF211E;
+
+  --test: #010606;
+}
+
 body {
   background-color: #212529;
 }
