@@ -4,7 +4,7 @@ const {
   
 const BusinessCard = artifacts.require('BusinessCard');
 
-contract('CARD', function (accounts) {
+contract('Business Card', function (accounts) {
   const name = 'Business Card';
   const symbol = 'CARD';
   const baseURI = 'https://gateway.pinata.cloud/ipfs/';

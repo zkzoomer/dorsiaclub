@@ -14,11 +14,9 @@ library BusinessCardUtils {
     function validateName(string calldata str) internal pure returns (bool) {
         bytes memory b = bytes(str);
         // String length requirements
-        if(b.length == 0) return false;
-        if(b.length > 22) return false; 
-        // No leading or trailing spaces
-        if(b[0] == 0x20) return false; 
-        if (b[b.length - 1] == 0x20) return false; 
+        if(
+            b.length == 0 || b.length > 22 || b[0] == 0x20 || b[b.length - 1] == 0x20
+        ) return false;
         // Characters check
         require(validateString(str), "Non valid characters");
 
@@ -33,11 +31,9 @@ library BusinessCardUtils {
     function validatePosition(string calldata str) internal pure returns (bool) {
         bytes memory b = bytes(str);
         // String length requirements
-        if(b.length == 0) return false;
-        if(b.length > 32) return false; 
-        // Position can contain as many spaces as desired, but no leading or trailing ones
-        if(b[0] == 0x20) return false; 
-        if (b[b.length - 1] == 0x20) return false; 
+        if(
+            b.length == 0 || b.length > 32 || b[0] == 0x20 || b[b.length - 1] == 0x20
+        ) return false;
         // Characters check
         require(validateString(str), "Non valid characters");
 

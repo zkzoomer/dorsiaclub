@@ -37,13 +37,11 @@ contract Marketplace is ReentrancyGuard, Ownable {
     
     // Business Card smart contract
     IBusinessCard immutable bCard;
-    // Oracle EOA
-    address payable oracle;
-    uint256 oracleFee = 0.015 ether;
+    // Oracle fee
+    uint256 private oracleFee = 0.015 ether;
 
-    constructor (address _bCardAddress, address payable _oracle) {
+    constructor (address _bCardAddress) {
         bCard = IBusinessCard(_bCardAddress);
-        oracle = _oracle;
     }
 
     mapping(uint256 => MarketItem) private idToMarketItem;
@@ -133,7 +131,7 @@ contract Marketplace is ReentrancyGuard, Ownable {
 
     /**
      * @dev Sells an item in the marketplace, sending the money to the seller, the NFT to the buyer, 
-     * and the oracle fee to the oracle EOA
+     * and updates the token accordingly
      */
     function createMarketSale(uint256 itemId, string calldata newName, IBusinessCard.CardProperties calldata newCardProperties) external payable nonReentrant {
         uint256 price = idToMarketItem[itemId].price;
@@ -147,11 +145,10 @@ contract Marketplace is ReentrancyGuard, Ownable {
         idToMarketItem[itemId].isSold = true;
         idToMarketItem[itemId].owner = payable(msg.sender);
         _tokensSold.increment();
-        bCard.updateCard(tokenId, newName, newCardProperties);
+        bCard.updateCard{ value: oracleFee }(tokenId, newName, newCardProperties);
         // Call bCard for a token upgrade
 
         idToMarketItem[itemId].seller.transfer(price);
-        oracle.transfer(oracleFee);
         bCard.transferFrom(address(this), msg.sender, tokenId);
     }
 
@@ -218,21 +215,22 @@ contract Marketplace is ReentrancyGuard, Ownable {
     /**
      * @dev Fetch market items that are being listed by the msg.sender
      */
-    function fetchSellingMarketItems() public view returns (MarketItem[] memory) {
-        return fetchMarketItemsByAddressProperty("seller");
+    function fetchSellingMarketItems(address account) public view returns (MarketItem[] memory) {
+        return fetchMarketItemsByAddressProperty("seller", account);
     }
 
     /**
      * @dev Fetch market items that are owned by the msg.sender
      */
-    function fetchOwnedMarketItems() public view returns (MarketItem[] memory) {
-        return fetchMarketItemsByAddressProperty("owner");
+    function fetchOwnedMarketItems(address account) public view returns (MarketItem[] memory) {
+        return fetchMarketItemsByAddressProperty("owner", account);
     }
 
     /**
-     * @dev Fetches market items according to "owner" or "seller" for its address property
+     * @dev Fetches market items according to "owner" or "seller" for its address property for a
+     * specified account address
      */
-    function fetchMarketItemsByAddressProperty(string memory _addressProperty)
+    function fetchMarketItemsByAddressProperty(string memory _addressProperty, address account)
         public
         view
         returns (MarketItem[] memory)
@@ -246,22 +244,18 @@ contract Marketplace is ReentrancyGuard, Ownable {
         uint256 currentIndex = 0;
 
         for (uint256 i = 0; i < totalItemsCount; i++) {
-            // Is it ok to assign this variable for better code legbility?
-            // Is it better to use memory or storage in this case?
             MarketItem storage item = idToMarketItem[i + 1];
             address addressPropertyValue = getMarketItemAddressByProperty(item, _addressProperty);
-            if (addressPropertyValue != msg.sender) continue;
+            if (addressPropertyValue != account) continue;
             itemCount += 1;
         }
 
         MarketItem[] memory items = new MarketItem[](itemCount);
 
         for (uint256 i = 0; i < totalItemsCount; i++) {
-            // Is it ok to assign this variable for better code legbility?
-            // Is it better to use memory or storage in this case?
             MarketItem storage item = idToMarketItem[i + 1];
             address addressPropertyValue = getMarketItemAddressByProperty(item, _addressProperty);
-            if (addressPropertyValue != msg.sender) continue;
+            if (addressPropertyValue != account) continue;
             items[currentIndex] = item;
             currentIndex += 1;
         }

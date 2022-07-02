@@ -7,13 +7,13 @@ pragma solidity ^0.8.0;
 import "./BusinessCardUtils.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
-import "@openzeppelin/contracts/interfaces//IERC721Enumerable.sol";
-import "@openzeppelin/contracts/interfaces//IERC721Metadata.sol";
-import "@openzeppelin/contracts/interfaces//IERC721Receiver.sol";
+import "@openzeppelin/contracts/interfaces/IERC721Enumerable.sol";
+import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
+import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/introspection//ERC165Storage.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -28,10 +28,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableMap for EnumerableMap.UintToAddressMap;
     using Strings for uint256;
-
-    // Equals to `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
-    // which can be also obtained as `IERC721Receiver(0).onERC721Received.selector`
-    bytes4 private constant _ERC721_RECEIVED = 0x150b7a02;
 
     // Mapping from holder address to their (enumerable) set of owned tokens
     mapping (address => EnumerableSet.UintSet) private _holderTokens;
@@ -57,40 +53,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     // Base URI
     string private _baseURI;
 
-    /*
-     *     bytes4(keccak256('balanceOf(address)')) == 0x70a08231
-     *     bytes4(keccak256('ownerOf(uint256)')) == 0x6352211e
-     *     bytes4(keccak256('approve(address,uint256)')) == 0x095ea7b3
-     *     bytes4(keccak256('getApproved(uint256)')) == 0x081812fc
-     *     bytes4(keccak256('setApprovalForAll(address,bool)')) == 0xa22cb465
-     *     bytes4(keccak256('isApprovedForAll(address,address)')) == 0xe985e9c5
-     *     bytes4(keccak256('transferFrom(address,address,uint256)')) == 0x23b872dd
-     *     bytes4(keccak256('safeTransferFrom(address,address,uint256)')) == 0x42842e0e
-     *     bytes4(keccak256('safeTransferFrom(address,address,uint256,bytes)')) == 0xb88d4fde
-     *
-     *     => 0x70a08231 ^ 0x6352211e ^ 0x095ea7b3 ^ 0x081812fc ^
-     *        0xa22cb465 ^ 0xe985e9c5 ^ 0x23b872dd ^ 0x42842e0e ^ 0xb88d4fde == 0x80ac58cd
-     */
-    bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
-
-    /*
-     *     bytes4(keccak256('name()')) == 0x06fdde03
-     *     bytes4(keccak256('symbol()')) == 0x95d89b41
-     *     bytes4(keccak256('tokenURI(uint256)')) == 0xc87b56dd
-     *
-     *     => 0x06fdde03 ^ 0x95d89b41 ^ 0xc87b56dd == 0x5b5e139f
-     */
-    bytes4 private constant _INTERFACE_ID_ERC721_METADATA = 0x5b5e139f;
-
-    /*
-     *     bytes4(keccak256('totalSupply()')) == 0x18160ddd
-     *     bytes4(keccak256('tokenOfOwnerByIndex(address,uint256)')) == 0x2f745c59
-     *     bytes4(keccak256('tokenByIndex(uint256)')) == 0x4f6ccce7
-     *
-     *     => 0x18160ddd ^ 0x2f745c59 ^ 0x4f6ccce7 == 0x780e9d63
-     */
-    bytes4 private constant _INTERFACE_ID_ERC721_ENUMERABLE = 0x780e9d63;
-
     ////////////////////////////////////////////////////////////
     /**
      * @dev Business Card specific variables
@@ -100,7 +62,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     bool public saleStarted;
 
     // Random nonce for generating genes
-    uint256 randNonce = 0;
+    uint256 private randNonce;
 
     struct Card {
         uint256 genes;
@@ -133,6 +95,9 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     // Requests made to the NFT oracle
     mapping(uint256 => bool) public requests;
 
+    // Marketplace address
+    address private bCardMarketplace;
+
     // Token mint price
     uint256 public _mintPrice = 0.1 ether;
     // Token URI update price
@@ -155,9 +120,39 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         _defaultURI = defaultURI_;
 
         // register the supported interfaces to conform to ERC721 via ERC165
-        _registerInterface(_INTERFACE_ID_ERC721);
-        _registerInterface(_INTERFACE_ID_ERC721_METADATA);
-        _registerInterface(_INTERFACE_ID_ERC721_ENUMERABLE);
+        /*
+        *     bytes4(keccak256('balanceOf(address)')) == 0x70a08231
+        *     bytes4(keccak256('ownerOf(uint256)')) == 0x6352211e
+        *     bytes4(keccak256('approve(address,uint256)')) == 0x095ea7b3
+        *     bytes4(keccak256('getApproved(uint256)')) == 0x081812fc
+        *     bytes4(keccak256('setApprovalForAll(address,bool)')) == 0xa22cb465
+        *     bytes4(keccak256('isApprovedForAll(address,address)')) == 0xe985e9c5
+        *     bytes4(keccak256('transferFrom(address,address,uint256)')) == 0x23b872dd
+        *     bytes4(keccak256('safeTransferFrom(address,address,uint256)')) == 0x42842e0e
+        *     bytes4(keccak256('safeTransferFrom(address,address,uint256,bytes)')) == 0xb88d4fde
+        *
+        *     => 0x70a08231 ^ 0x6352211e ^ 0x095ea7b3 ^ 0x081812fc ^
+        *        0xa22cb465 ^ 0xe985e9c5 ^ 0x23b872dd ^ 0x42842e0e ^ 0xb88d4fde == 0x80ac58cd
+        */
+        _registerInterface(0x80ac58cd);
+
+        /*
+        *     bytes4(keccak256('name()')) == 0x06fdde03
+        *     bytes4(keccak256('symbol()')) == 0x95d89b41
+        *     bytes4(keccak256('tokenURI(uint256)')) == 0xc87b56dd
+        *
+        *     => 0x06fdde03 ^ 0x95d89b41 ^ 0xc87b56dd == 0x5b5e139f
+        */
+        _registerInterface(0x5b5e139f);
+
+        /*
+        *     bytes4(keccak256('totalSupply()')) == 0x18160ddd
+        *     bytes4(keccak256('tokenOfOwnerByIndex(address,uint256)')) == 0x2f745c59
+        *     bytes4(keccak256('tokenByIndex(uint256)')) == 0x4f6ccce7
+        *
+        *     => 0x18160ddd ^ 0x2f745c59 ^ 0x4f6ccce7 == 0x780e9d63
+        */
+        _registerInterface(0x780e9d63);
     }
     
     ////////////////////////////////////////////////////////////
@@ -173,6 +168,13 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     }
 
     /**
+     * @dev Sets up a Marketplace allowing the native trading of Business Cards
+     */
+    function setMarketplace(address _marketplace) external onlyOwner {
+        bCardMarketplace = _marketplace;
+    }
+
+    /**
      * @dev Changes the update price for the usage of the oracle
      */
     function modifyUpdatePrice(uint256 newUpdatePrice) external onlyOwner {
@@ -181,33 +183,26 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     }
 
     /**
-     * @dev For functions that may only be called by the specified oracle
-     */
-    modifier onlyOracle() {
-        require(_msgSender() == serverOracle); // dev: Only the assigned oracle can call these functions
-        _;
-    }
-
-    /**
      * @dev Calls the oracle to update a certain token URI with the newly defined Card struct
      */
-    function _updateTokenURI(uint256 _tokenId, CardProperties calldata _cardProperties) internal {
-        require(_exists(_tokenId), "Token does not exist");
-        require(saleStarted == true, "Updates paused");
+    function _updateTokenURI(uint256 _tokenId, uint256 _genes, string calldata _cardName, CardProperties calldata _cardProperties) internal {
+        require(saleStarted == true, "Sale not started or paused");
+        require(_exists(_tokenId));
         // Calls for updating the token can only be made if it is not being processed already
         require(requests[_tokenId] == false, "Update being processed");
         requests[_tokenId] = true;
         // Fund the server oracle with enough funds for the URI update transaction
         payable(serverOracle).transfer(_oraclePrice);
         // Emit event to be catched by the server oracle running off-chain
-        emit UpdateRequest(_tokenId, _tokenStats[_tokenId].genes, _tokenStats[_tokenId].name, _cardProperties);
+        emit UpdateRequest(_tokenId, _genes, _cardName, _cardProperties);
     }
 
     /**
      * @dev Updates a certain token URI and clears the corresponding update request
      * Only the assigned server oracle is allowed to call this function
      */
-     function callback(uint256 _tokenId, string memory _tokenURI) external onlyOracle {
+     function callback(uint256 _tokenId, string memory _tokenURI) external {
+        require(_msgSender() == serverOracle); // dev: Only the assigned oracle can call this function
         require(requests[_tokenId]); // dev: Request not in pending list
         _setTokenURI(_tokenId, _tokenURI);
         delete requests[_tokenId];
@@ -218,9 +213,8 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev Mints a new NFT Business Card
      */
     function getCard(string calldata _cardName, CardProperties calldata _cardProperties) public payable {
-        require(saleStarted == true, "Sale not started or paused");
-        require(totalSupply() < maxSupply, "Sale has ended");
-        require(msg.value >= _mintPrice, "Value sent is below the price");
+        require(totalSupply() < maxSupply);  // dev: sale has ended, can be managed on frontend
+        require(msg.value >= _mintPrice);  // dev: value sent is below the price, can be managed on frontend
         // Minting a new NFT with the name and position provided
         _safeMint(_msgSender(), totalSupply() + 1, _cardName, _cardProperties);
     }
@@ -254,17 +248,16 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         // Generating a new card
         toggleReserveName(_cardName, true);
         _tokenStats[_tokenId] = Card(genes, _cardName);
-        _safeMint(_to, _tokenId, abi.encodePacked(_cardName, _cardProperties.position, genes));
-        _updateTokenURI(_tokenId, _cardProperties);
+        _safeMint(_to, _tokenId);
+        _updateTokenURI(_tokenId, genes, _cardName, _cardProperties);
     }
 
     /**
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
-    function _safeMint(address to, uint256 tokenId, bytes memory _data) internal virtual {
+    function _safeMint(address to, uint256 tokenId) internal virtual {
         _mint(to, tokenId);
-        require(_checkOnERC721Received(address(0), to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
     /**
@@ -273,7 +266,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * User can change both name and position, just the name, or just the position (by leaving those inputs empty)
      */
     function updateCard(uint256 tokenId, string calldata newName, CardProperties calldata newCardProperties) public payable {
-        
+        require(saleStarted == true, "Updates paused");
         require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved");
         require(
             isNameReserved(newName) == false &&
@@ -293,9 +286,8 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
             "Position not valid"
         );
         require(
-            msg.value >= _updatePrice, 
-            "Value sent is below the price"
-        );
+            msg.value >= _updatePrice || _msgSender() == bCardMarketplace
+        );  // dev: value sent is below the price, can be managed on frontend
 
         // Only change the name if specified
         if (bytes(newName).length > 0) {
@@ -308,7 +300,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         }
 
         // Make new tokenURI update request
-        _updateTokenURI(tokenId, newCardProperties);
+        _updateTokenURI(tokenId, _tokenStats[tokenId].genes, newName, newCardProperties);
     }
 
     /**
@@ -322,8 +314,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
             _isApprovedOrOwner(_msgSender(), tokenId2), 
             "Caller is not owner nor approved"
         );
-        require(msg.value >= _updatePrice, "Value sent is below the price");
-        require(saleStarted == true, "Updates paused");
+        require(msg.value >= _updatePrice);  // dev: value sent is below the price, can be managed on frontend
         // Calls for updating the token can only be made if it is not being processed already
         require(requests[tokenId1] == false && requests[tokenId2] == false, "Update being processed");
 
@@ -332,22 +323,22 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         _tokenStats[tokenId1].name = _tokenStats[tokenId2].name;
         _tokenStats[tokenId2].name = name1;
 
-        // Request now pending
+        // Requests now pending
         requests[tokenId1] = true;
-        requests[tokenId1] = true;
+        requests[tokenId2] = true;
 
         // Emitting a single swap request to the oracle -- processed differently
         emit SwapRequest(tokenId1, tokenId2, _tokenStats[tokenId1].genes, _tokenStats[tokenId2].genes);
 
-        // Fund the server oracle with enough funds for the URI update transaction
-        payable(serverOracle).transfer(_oraclePrice);
+        // Fund the server oracle with enough funds for the two URI updates
+        payable(serverOracle).transfer(2 * _oraclePrice);
     }
 
     /**
      * @dev Updates the tokenURI, intented to be used only when oracle fails to update a tokenURI
      */
-    function updateTokenURI(uint256 tokenId, CardProperties calldata _cardProperties) external onlyOwner {
-        _updateTokenURI(tokenId, _cardProperties);
+    function updateTokenURI(uint256 tokenId, string calldata cardName, CardProperties calldata _cardProperties) external onlyOwner {
+        _updateTokenURI(tokenId, _tokenStats[tokenId].genes, cardName, _cardProperties);
     }
 
     /**
@@ -375,7 +366,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     /**
      * @dev Overrides the default tokenURI behaviour to include the default URI
      */
-    function tokenURI(uint256 tokenId) public view virtual returns (string memory) {
+    function tokenURI(uint256 tokenId) external view override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory token = _tokenURIs[tokenId];
@@ -409,7 +400,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev For setting the default URI for all tokenId's. 
      */
     function setDefaultURI(string calldata newDefaultURI) external onlyOwner {
-        require(bytes(newDefaultURI).length > 0, "Cannot be set to empty string");
+        require(bytes(newDefaultURI).length > 0);  // dev: cannot be set to empty string
         _defaultURI = newDefaultURI;
     }
 
@@ -588,7 +579,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      */
     function _safeTransfer(address from, address to, uint256 tokenId, bytes memory _data) internal virtual {
         _transfer(from, to, tokenId);
-        require(_checkOnERC721Received(from, to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
     /**
@@ -680,34 +670,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
-
-    /**
-     * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
-     * The call is not executed if the target address is not a contract.
-     *
-     * @param from address representing the previous owner of the given token ID
-     * @param to target address that will receive the tokens
-     * @param tokenId uint256 ID of the token to be transferred
-     * @param _data bytes optional data to send along with the call
-     * @return bool whether the call correctly returned the expected magic value
-     */
-    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory _data)
-        private returns (bool)
-    {
-        if (!to.isContract()) {
-            return true;
-        }
-        bytes memory returndata = to.functionCall(abi.encodeWithSelector(
-            IERC721Receiver(to).onERC721Received.selector,
-            _msgSender(),
-            from,
-            tokenId,
-            _data
-        ), "ERC721: transfer to non ERC721Receiver implementer");
-        bytes4 retval = abi.decode(returndata, (bytes4));
-        return (retval == _ERC721_RECEIVED);
-    }
-
 
     /**
      * @dev Approve `to` to operate on `tokenId`

@@ -1,7 +1,7 @@
 /* *
  * Taken from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/test/token/ERC721/ERC721.test.js
  * Adapted to meet the Business Card deployment requirements, namely the definition of a server oracle and the
- * following start of trading
+ * following start of trading, plus taking out the safeTransfer functionality to save gas -- assuming it on the frontend
  */
 
 const {
