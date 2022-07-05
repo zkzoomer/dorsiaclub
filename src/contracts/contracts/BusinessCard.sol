@@ -18,9 +18,15 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+contract ISoulboundCard {
+
+    function burnCards(uint tokenId) external { }
+
+} 
+
 /**
- * @title ERC721 Non-Fungible Token Standard basic implementation
- * @dev see https://eips.ethereum.org/EIPS/eip-721
+ * @title NFT Business Card smart contract
+ * @dev compliant with https://eips.ethereum.org/EIPS/eip-721
  */
 contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumerable, Ownable {
     using SafeMath for uint256;
@@ -53,10 +59,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     // Base URI
     string private _baseURI;
 
-    ////////////////////////////////////////////////////////////
-    /**
-     * @dev Business Card specific variables
-     */
     // Public variables
     uint256 public constant maxSupply = 1111;
     bool public saleStarted;
@@ -97,6 +99,8 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
 
     // Marketplace address
     address private bCardMarketplace;
+    // sCard address - SoulboundCards
+    ISoulboundCard private sCard;
 
     // Token mint price
     uint256 public _mintPrice = 0.1 ether;
@@ -155,15 +159,10 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         _registerInterface(0x780e9d63);
     }
     
-    ////////////////////////////////////////////////////////////
-    /**
-     * @dev Business Card specific code
-     */
     /**
      * @dev Sets up a new oracle that handles the dynamic aspect of the NFT
      */
     function setOracle(address _serverOracle) external onlyOwner {
-        require(_serverOracle != address(0)); // dev: cannot set the oracle to the zero address
         serverOracle = _serverOracle;
     }
 
@@ -172,6 +171,13 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      */
     function setMarketplace(address _marketplace) external onlyOwner {
         bCardMarketplace = _marketplace;
+    }
+
+    /**
+     * @dev Sets up the sCard address for interaction
+     */
+    function setSoulboundCard(address _soulbound) external onlyOwner {
+        sCard = ISoulboundCard(_soulbound);
     }
 
     /**
@@ -204,7 +210,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      function callback(uint256 _tokenId, string memory _tokenURI) external {
         require(_msgSender() == serverOracle); // dev: Only the assigned oracle can call this function
         require(requests[_tokenId]); // dev: Request not in pending list
-        _setTokenURI(_tokenId, _tokenURI);
+        _tokenURIs[_tokenId] = _tokenURI;
         delete requests[_tokenId];
         emit TokenURIUpdated(_tokenId, _tokenURI);
      }
@@ -248,7 +254,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         // Generating a new card
         toggleReserveName(_cardName, true);
         _tokenStats[_tokenId] = Card(genes, _cardName);
-        _safeMint(_to, _tokenId);
+        _safeMint(_to, _tokenId, abi.encodePacked(_cardName, genes));
         _updateTokenURI(_tokenId, genes, _cardName, _cardProperties);
     }
 
@@ -256,8 +262,9 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
-    function _safeMint(address to, uint256 tokenId) internal virtual {
+    function _safeMint(address to, uint256 tokenId, bytes memory _data) internal virtual {
         _mint(to, tokenId);
+        require(_checkOnERC721Received(address(0), to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
     /**
@@ -428,9 +435,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         payable(msg.sender).transfer(balance);
     }
 
-    /*
-     * @dev ERC721 code
-     */
     /**
      * @dev See {IERC721-balanceOf}.
      */
@@ -545,6 +549,16 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     }
 
     /**
+     * @dev Transfer the token while also burning all the soulbound cards associated with it if specified
+     */
+    function transferFrom(address from, address to, uint256 tokenId, bool burn) public virtual {
+        if (burn) {
+            sCard.burnCards(tokenId);
+        }
+        transferFrom(from, to, tokenId);
+    }
+
+    /**
      * @dev See {IERC721-safeTransferFrom}.
      */
     function safeTransferFrom(address from, address to, uint256 tokenId) public virtual override {
@@ -579,6 +593,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      */
     function _safeTransfer(address from, address to, uint256 tokenId, bytes memory _data) internal virtual {
         _transfer(from, to, tokenId);
+        require(_checkOnERC721Received(from, to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
     /**
@@ -622,8 +637,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         require(_to != address(0), "ERC721: mint to the zero address");
         require(!_exists(_tokenId), "ERC721: token already minted");
 
-        _beforeTokenTransfer(address(0), _to, _tokenId);
-
         _holderTokens[_to].add(_tokenId);
 
         _tokenOwners.set(_tokenId, _to);
@@ -646,8 +659,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         require(ownerOf(tokenId) == from, "ERC721: transfer of token that is not own"); // internal owner
         require(to != address(0), "ERC721: transfer to the zero address");
 
-        _beforeTokenTransfer(from, to, tokenId);
-
         // Clear approvals from the previous owner
         _approve(address(0), tokenId);
 
@@ -657,18 +668,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         _tokenOwners.set(tokenId, to);
 
         emit Transfer(from, to, tokenId);
-    }
-
-    /**
-     * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must exist.
-     */
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
-        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
-        _tokenURIs[tokenId] = _tokenURI;
     }
 
     /**
@@ -682,20 +681,30 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     }
 
     /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
+     * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
+     * The call is not executed if the target address is not a contract.
      *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     * @param from address representing the previous owner of the given token ID
+     * @param to target address that will receive the tokens
+     * @param tokenId uint256 ID of the token to be transferred
+     * @param _data bytes optional data to send along with the call
+     * @return bool whether the call correctly returned the expected magic value
      */
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual { }
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory _data)
+        private returns (bool)
+    {
+        if (!to.isContract()) {
+            return true;
+        }
+        bytes memory returndata = to.functionCall(abi.encodeWithSelector(
+            IERC721Receiver(to).onERC721Received.selector,
+            _msgSender(),
+            from,
+            tokenId,
+            _data
+        ), "ERC721: transfer to non ERC721Receiver implementer");
+        bytes4 retval = abi.decode(returndata, (bytes4));
+        return (retval == 0x150b7a02);
+    }
 
 }

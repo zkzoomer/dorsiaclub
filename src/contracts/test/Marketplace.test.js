@@ -270,7 +270,7 @@ describe('Contract: Marketplace', function () {
     expect(sellerNftTokens.length).to.equal(2)
   })
 
-  it('can change the oracle fee', async function () {
+  /* it('can change the oracle fee', async function () {
     // Oracle fee can be changed
     await marketplaceContract.setOracleFee(ethers.utils.parseEther('0.025'));
     const newFee = await marketplaceContract.getOracleFee();
@@ -289,7 +289,7 @@ describe('Contract: Marketplace', function () {
 
     // But this will clear
     await marketplaceContract.connect(buyer).createMarketSale(1, secondToken[0], secondToken[1], { value: BigInt(price) + BigInt(newFee) })
-  })
+  }) */
 
   it('holds the token while listing is active', async function () {
     // Arrange
@@ -337,11 +337,6 @@ describe('Contract: Marketplace', function () {
     // bCard contract still holds NO balance
     expect(await provider.getBalance(bCard.address)).to.equal(ethers.utils.parseEther('0'))
   })
-
-
-  // createMarketSale behaves like updateCard
-
-  // TODO: Withdrawals tested big time alongside BusinessCard smart contract
 
   // TODO: SoulboundCard, the listing transfer does NOT delete corresponding sCards,
   // but createMarketSale WILL.

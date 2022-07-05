@@ -21,10 +21,16 @@ contract IBusinessCard {
 
     function transferFrom(address from, address to, uint256 tokenId) external { }
 
+    function transferFrom(address from, address to, uint256 tokenId, bool burn) external { }
+
     function updateCard(uint256 tokenId, string calldata newName, CardProperties calldata newCardProperties) public payable { }
 
 }
 
+/**
+ * @title NFT Business Card native marketplace
+ * @dev seemingless interaction with the BusinessCard and SoulboundCard smart contracts
+ */
 contract Marketplace is ReentrancyGuard, Ownable {
     using Counters for Counters.Counter;
     
@@ -37,8 +43,8 @@ contract Marketplace is ReentrancyGuard, Ownable {
     
     // Business Card smart contract
     IBusinessCard immutable bCard;
-    // Oracle fee
-    uint256 private oracleFee = 0.015 ether;
+    // Oracle fee, fixed as it is the same one used for BusinessCard
+    uint256 public oracleFee = 0.015 ether;
 
     constructor (address _bCardAddress) {
         bCard = IBusinessCard(_bCardAddress);
@@ -65,20 +71,6 @@ contract Marketplace is ReentrancyGuard, Ownable {
         bool sold,
         bool cancelled
     );
-
-    /**
-     * @dev Gets the current oracle fee
-    */
-    function getOracleFee() public view returns(uint256) {
-        return oracleFee;
-    }
-
-    /**
-     * @dev Sets the oracle fee -- gas paid by the oracle EOA when updating Business Cards
-    */
-    function setOracleFee(uint256 _oracleFee) external onlyOwner {
-        oracleFee = _oracleFee;
-    }
 
     /**
      * @dev Lists an item in the marketplace, transafering the NFT from the sender to this smart contract
@@ -138,7 +130,7 @@ contract Marketplace is ReentrancyGuard, Ownable {
         uint256 tokenId = idToMarketItem[itemId].tokenId;
 
         require(
-            msg.value >= price + oracleFee,  // Buyer must pay the seller plus the oracle fee
+            msg.value == price + oracleFee,  // Buyer must pay the seller plus the oracle fee
             "Payment must be price plus oracle fee"
         );
 
@@ -149,7 +141,7 @@ contract Marketplace is ReentrancyGuard, Ownable {
         // Call bCard for a token upgrade
 
         idToMarketItem[itemId].seller.transfer(price);
-        bCard.transferFrom(address(this), msg.sender, tokenId);
+        bCard.transferFrom(address(this), msg.sender, tokenId, true);
     }
 
     /**
