@@ -22,10 +22,11 @@ const thirdTokenId = new BN('3');
 const fourthTokenId = new BN(4);
 const nonExistentTokenId = new BN('10');
 
-const firstToken = ['Patrick BATEMAN', ['Vice President', '', '', '', '0', '', '', '']];
-const secondToken = ['Paul ALLEN', ['Vice President', '', '', '', '0', '', '', '']];
-const thirdToken = ['David VAN PATTEN', ['Vice President', '', '', '', '0', '', '', '']];
-const fourthToken = ['Timothy BRYCE', ['Vice President', '', '', '', '0', '', '', '']];
+const cardProperties = ['Vice President', 'twitterAccount', 'telegramAccount', 'telegramGroup', '123456789012345678', 'discordGroup', 'githubUsername', 'userWebsite.com']
+const firstToken = ['Patrick BATEMAN', cardProperties];
+const secondToken = ['Paul ALLEN', cardProperties];
+const thirdToken = ['David VAN PATTEN', cardProperties];
+const fourthToken = ['Timothy BRYCE', cardProperties];
 
 const mintPrice = web3.utils.toWei('0.1', 'ether');
 
@@ -640,16 +641,16 @@ function shouldBehaveLikeERC721Enumerable (errorPrefix, owner, newOwner, approve
 
       describe('when the index is greater than or equal to the total tokens owned by the given address', function () {
         it('reverts', async function () {
-          await expectRevert(
-            this.token.tokenOfOwnerByIndex(owner, 2), 'Index out of bounds',
+          await expectRevert.unspecified(
+            this.token.tokenOfOwnerByIndex(owner, 2)
           );
         });
       });
 
       describe('when the given address does not own any token', function () {
         it('reverts', async function () {
-          await expectRevert(
-            this.token.tokenOfOwnerByIndex(other, 0), 'Index out of bounds',
+          await expectRevert.unspecified(
+            this.token.tokenOfOwnerByIndex(other, 0)
           );
         });
       });
@@ -671,8 +672,8 @@ function shouldBehaveLikeERC721Enumerable (errorPrefix, owner, newOwner, approve
 
         it('returns empty collection for original owner', async function () {
           expect(await this.token.balanceOf(owner)).to.be.bignumber.equal('0');
-          await expectRevert(
-            this.token.tokenOfOwnerByIndex(owner, 0), 'Index out of bounds',
+          await expectRevert.unspecified(
+            this.token.tokenOfOwnerByIndex(owner, 0)
           );
         });
       });
@@ -688,8 +689,8 @@ function shouldBehaveLikeERC721Enumerable (errorPrefix, owner, newOwner, approve
       });
 
       it('reverts if index is greater than supply', async function () {
-        await expectRevert(
-          this.token.tokenByIndex(2), 'Index out of bounds',
+        await expectRevert.unspecified(
+          this.token.tokenByIndex(2)
         );
       });
 

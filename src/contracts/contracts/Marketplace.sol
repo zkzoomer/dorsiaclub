@@ -21,7 +21,7 @@ contract IBusinessCard {
 
     function transferFrom(address from, address to, uint256 tokenId) external { }
 
-    function transferFrom(address from, address to, uint256 tokenId, bool burn) external { }
+    function transferFromWithoutBurn(address from, address to, uint256 tokenId) external { }
 
     function updateCard(uint256 tokenId, string calldata newName, CardProperties calldata newCardProperties) public payable { }
 
@@ -46,9 +46,7 @@ contract Marketplace is ReentrancyGuard, Ownable {
     // Oracle fee, fixed as it is the same one used for BusinessCard
     uint256 public oracleFee = 0.015 ether;
 
-    constructor (address _bCardAddress) {
-        bCard = IBusinessCard(_bCardAddress);
-    }
+    bool public saleStarted;
 
     mapping(uint256 => MarketItem) private idToMarketItem;
 
@@ -72,10 +70,29 @@ contract Marketplace is ReentrancyGuard, Ownable {
         bool cancelled
     );
 
+    constructor (address _bCardAddress) {
+        bCard = IBusinessCard(_bCardAddress);
+    }
+
+    /**
+     * @dev Starts the sale
+     */
+    function startSale() external onlyOwner {
+        saleStarted = true;
+    }
+
+    /**
+     * @dev Pauses the sale
+     */
+    function pauseSale() external onlyOwner {
+        saleStarted = false;
+    }
+
     /**
      * @dev Lists an item in the marketplace, transafering the NFT from the sender to this smart contract
      */
     function createMarketItem(uint256 tokenId, uint256 price) external payable nonReentrant returns (uint256) {
+        require(saleStarted == true, "Marketplace is paused");
         require(price > 0, "Business Cards are not free!");
 
         _itemIds.increment();
@@ -91,7 +108,8 @@ contract Marketplace is ReentrancyGuard, Ownable {
             false
         );
 
-        bCard.transferFrom(msg.sender, address(this), tokenId);
+        // Transferring without burning the associated Soulbound Cards
+        bCard.transferFromWithoutBurn(msg.sender, address(this), tokenId);
 
         emit MarketItemCreated(
             itemId,
@@ -118,7 +136,8 @@ contract Marketplace is ReentrancyGuard, Ownable {
         idToMarketItem[itemId].isCancelled = true;
         _tokensCanceled.increment();
 
-        bCard.transferFrom(address(this), msg.sender, tokenId);
+        // Transferring without burning the associated Soulbound Cards
+        bCard.transferFromWithoutBurn(address(this), msg.sender, tokenId);
     }
 
     /**
@@ -126,6 +145,8 @@ contract Marketplace is ReentrancyGuard, Ownable {
      * and updates the token accordingly
      */
     function createMarketSale(uint256 itemId, string calldata newName, IBusinessCard.CardProperties calldata newCardProperties) external payable nonReentrant {
+        require(saleStarted == true, "Marketplace is paused");
+        
         uint256 price = idToMarketItem[itemId].price;
         uint256 tokenId = idToMarketItem[itemId].tokenId;
 
@@ -137,11 +158,12 @@ contract Marketplace is ReentrancyGuard, Ownable {
         idToMarketItem[itemId].isSold = true;
         idToMarketItem[itemId].owner = payable(msg.sender);
         _tokensSold.increment();
+        // Call bCard for a token upgrade, providing the oracle fee
         bCard.updateCard{ value: oracleFee }(tokenId, newName, newCardProperties);
-        // Call bCard for a token upgrade
 
         idToMarketItem[itemId].seller.transfer(price);
-        bCard.transferFrom(address(this), msg.sender, tokenId, true);
+        // Transferring AND burning the associated Soulbound Cards
+        bCard.transferFrom(address(this), msg.sender, tokenId);
     }
 
     /**

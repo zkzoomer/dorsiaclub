@@ -34,6 +34,7 @@ describe('Contract: Marketplace', function () {
     const Marketplace = await ethers.getContractFactory('Marketplace')
     marketplaceContract = await Marketplace.deploy(bCard.address)
     await marketplaceContract.deployed()
+    await marketplaceContract.startSale()
 
     await bCard.setMarketplace(marketplaceContract.address);
   }
@@ -270,27 +271,6 @@ describe('Contract: Marketplace', function () {
     expect(sellerNftTokens.length).to.equal(2)
   })
 
-  /* it('can change the oracle fee', async function () {
-    // Oracle fee can be changed
-    await marketplaceContract.setOracleFee(ethers.utils.parseEther('0.025'));
-    const newFee = await marketplaceContract.getOracleFee();
-    expect(newFee).to.equal(ethers.utils.parseEther('0.025'));
-
-    // But not by a non owner
-    expect(marketplaceContract.connect(seller).setOracleFee(ethers.utils.parseEther('0')))
-      .to.be.revertedWith("Ownable: caller is not the owner");
-
-    // This new fee needs to be provided
-    const price = ethers.utils.parseEther('10')
-    await mintTokenAndCreateMarketItem(1, price);
-
-    expect(marketplaceContract.connect(buyer).createMarketSale(1, secondToken[0], secondToken[1], { value: BigInt(price) + BigInt(oracleFee) }))
-      .to.be.revertedWith("Payment must be price plus oracle fee")
-
-    // But this will clear
-    await marketplaceContract.connect(buyer).createMarketSale(1, secondToken[0], secondToken[1], { value: BigInt(price) + BigInt(newFee) })
-  }) */
-
   it('holds the token while listing is active', async function () {
     // Arrange
     const price = ethers.utils.parseEther('10')
@@ -314,12 +294,12 @@ describe('Contract: Marketplace', function () {
   })
 
   it('funds the oracle regardless of no updateFee', async function () {
-    /* updateCard will behave as described and tested for BusinessCard, the only difference
-    * being that the Marketplace is whitelisted and does NOT pay the updateFee that would
-    * otherwise end up in the BusinessCard smart contract.
-    * The oracle gets funded nonetheless as a createMarketItem call has inside of it a call
-    * to updateCard, providing as value just the oracleFee necessary to ensure correct functioning
-    */
+    // updateCard will behave as described and tested for BusinessCard, the only difference
+    // being that the Marketplace is whitelisted and does NOT pay the updateFee that would
+    // otherwise end up in the BusinessCard smart contract.
+    // The oracle gets funded nonetheless as a createMarketItem call has inside of it a call
+    // to updateCard, providing as value just the oracleFee necessary to ensure correct functioning
+    
     const price = ethers.utils.parseEther('10')
     await bCard.connect(seller).getCard(firstToken[0], firstToken[1], {value: mintPrice})
     await bCard.connect(oracle).callback(1, oracleCallbackTokenURI)
@@ -336,6 +316,24 @@ describe('Contract: Marketplace', function () {
     expect(await oracle.getBalance()).to.equal(oracleStartBalance.add(oracleFee))
     // bCard contract still holds NO balance
     expect(await provider.getBalance(bCard.address)).to.equal(ethers.utils.parseEther('0'))
+  })
+
+  it('cannot list or buy cards with marketplace paused, but can cancel listings', async function () {
+    // Arrange
+    const price = ethers.utils.parseEther('10')
+    await mintTokenAndCreateMarketItem(1, price)
+    await marketplaceContract.connect(deployer).pauseSale();
+
+    expect(marketplaceContract.connect(buyer).createMarketSale(1, secondToken[0], secondToken[1], { value: BigInt(price) + BigInt(oracleFee) }))
+      .to.be.revertedWith("Marketplace is paused")
+
+    await bCard.connect(seller).getCard(secondToken[0], secondToken[1], {value: mintPrice})
+    await bCard.connect(oracle).callback('2', oracleCallbackTokenURI)
+    expect(marketplaceContract.connect(seller).createMarketItem('2', price))
+      .to.be.revertedWith("Marketplace is paused")
+
+    // But cancelling is possible
+    await marketplaceContract.connect(seller).cancelMarketItem(1);
   })
 
   // TODO: SoulboundCard, the listing transfer does NOT delete corresponding sCards,

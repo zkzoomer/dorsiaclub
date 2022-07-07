@@ -10,11 +10,11 @@ const {
     shouldBehaveLikeERC721Enumerable,
   } = require('./ERC721.behavior');
   
-const BusinessCard = artifacts.require('BusinessCard');
+const BusinessCard = artifacts.require('BusinessCard')
 
 contract('ERC721', function (accounts) {
   const name = 'NFT Business Cards';
-  const symbol = 'CARD';
+  const symbol = 'BCARD';
 
   beforeEach(async function () {
       // Deploying the contract first

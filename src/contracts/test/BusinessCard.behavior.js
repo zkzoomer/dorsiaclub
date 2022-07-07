@@ -8,12 +8,10 @@ const { expect } = require('chai');
 const { ZERO_ADDRESS } = constants;
 
 // Example cardName and cardProperties
-const firstToken = ['Patrick BATEMAN', ['Vice President', '', '', '', '0', '', '', '']];
-const secondToken = ['Paul ALLEN', ['Vice President', '', '', '', '0', '', '', '']];
-const thirdToken = ['David VAN PATTEN', ['Vice President', '', '', '', '0', '', '', '']];
-const fourthToken = ['Timothy BRYCE', ['Vice President', '', '', '', '0', '', '', '']];
-const fifthToken = ['Luis CARRUTHERS', ['Vice President', '', '', '', '0', '', '', '']];
-const sixthToken = ['Donald KIMBALL', ['NYPD Detective', '', '', '', '0', '', '', '']];
+const cardProperties = ['Vice President', 'twitterAccount', 'telegramAccount', 'telegramGroup', '123456789012345678', 'discordGroup', 'githubUsername', 'userWebsite.com']
+const firstToken = ['Patrick BATEMAN', cardProperties];
+const secondToken = ['Paul ALLEN', cardProperties];
+const thirdToken = ['David VAN PATTEN', cardProperties];
 const emptyUpdate = ['', ['', '', '', '', 0, '', '', '']]
 
 // Prices for minting, updating, and oracle
@@ -41,22 +39,14 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
         let logs = null;
 
         it('cannot get card', async function () {
-            await expectRevert(
+            await expectRevert.unspecified(
                 this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice})
-                ,  
-                "Sale not started or paused"
             )
         })
 
         it('cannot start sale', async function () {
             await expectRevert.unspecified( 
                 this.token.startSale({ from: owner }),  
-            )
-        })
-
-        it('cannot set oracle to the null address', async function () {
-            await expectRevert.unspecified(
-                this.token.setOracle(ZERO_ADDRESS, { from: owner }),
             )
         })
 
@@ -67,10 +57,8 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
         })
 
         it('cannot mint', async function () {
-            await expectRevert(
+            await expectRevert.unspecified(
                 this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice })
-                ,
-                "Sale not started or paused"
             )
         })
     }) 
@@ -115,6 +103,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 })
             })
 
+            // TODO: include this on tests
             /* context('when all tokens are minted', function() {
                 // To test the maximum supply more rapidly, we are assuming a maxSupply set at 5 just for testing purposes
                 beforeEach(async function () {
@@ -247,10 +236,8 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
         describe('getCard', function () {
             it('cannot mint if sale is paused', async function () {
                 this.token.pauseSale({ from: owner })
-                await expectRevert(
+                await expectRevert.unspecified(
                     this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice })
-                    ,
-                    "Sale not started or paused"
                 )
             })
 
@@ -420,6 +407,13 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 // Mints a token to change name and or position of, and performs the update
                 await this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice })
                 await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+            })
+
+            it('cannot update if sale is paused', async function () {
+                this.token.pauseSale({ from: owner })
+                await expectRevert.unspecified(
+                    this.token.updateCard('1', emptyUpdate[0], emptyUpdate[1], { from: buyer1, value: mintPrice })
+                )
             })
 
             it('cannot update non-existing tokens', async function () {
@@ -596,6 +590,13 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 await this.token.callback('2', oracleCallbackTokenURI, { from: oracle })
             })
 
+            it('cannot update if sale is paused', async function () {
+                this.token.pauseSale({ from: owner })
+                await expectRevert.unspecified(
+                    this.token.swapCards('1', '2', { from: buyer1, value: updatePrice })
+                )
+            })
+
             it('cannot update non-existing tokens', async function () {
                 // Revert message is not "Token does not exist", because the caller cannot be owner or approved for a token that does not exist
                 await expectRevert(
@@ -712,6 +713,11 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 // Mints a new token and updates its URI - so that now an update request can be made
                 await this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice })
                 await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+            })
+
+            it('can be called with sale is paused', async function () {
+                this.token.pauseSale({ from: owner })
+                this.token.updateTokenURI('1', emptyUpdate[0], emptyUpdate[1], { from: owner })
             })
 
             it('cannot update non-existing tokens', async function () {
@@ -861,18 +867,8 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 })
 
                 it('cannot mint new tokens', async function () {
-                    await expectRevert(
+                    await expectRevert.unspecified(
                         this.token.getCard(secondToken[0], secondToken[1], { from: buyer2, value: mintPrice})
-                        ,
-                        "Sale not started or paused"
-                    )
-                })
-
-                it('cannot update existing tokens', async function () {
-                    await expectRevert(
-                        this.token.updateTokenURI(new BN('1'), firstToken[0], firstToken[1], { from: owner })
-                        ,
-                        "Sale not started or paused"
                     )
                 })
 

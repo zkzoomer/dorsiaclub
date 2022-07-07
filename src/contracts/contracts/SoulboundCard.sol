@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
+
 import "./BusinessCard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
@@ -98,38 +100,17 @@ contract SoulboundCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumer
      * @dev Sends a copy of the Business Card specified by tokenId as a Soulbound Card to the
      * specified address
      */
-    function sendSoulboundCard(address from, address recipient, uint256 tokenId) external {
+    function sendSoulboundCard(address from, address receiver, uint256 tokenId) external {
         require(_isApprovedOrOwner(msg.sender, tokenId), "SCARD: caller is not owner nor approved");
-        require(bCard.ownerOf(tokenId) == from, "SCARD: transfer of token that is not own");
-        require(recipient != address(0), "SCARD: sending to zero address");
-        require(!_blacklistedReceivers[recipient], "SCARD: recipient blacklisted themselves");
-        require(!_receivedTokens[recipient].contains(tokenId), "SCARD: recipient already received the Soulbound Card");
+        require(bCard.ownerOf(tokenId) == from, "SCARD: sending card that is not own");
+        require(receiver != address(0), "SCARD: sending to zero address");
+        require(!_blacklistedReceivers[receiver], "SCARD: receiver blacklisted themselves");
+        require(!_receivedTokens[receiver].contains(tokenId), "SCARD: receiver was already sent the Soulbound Card");
 
-        _receivedTokens[recipient].add(tokenId);
-        _tokenReceivers[tokenId].add(recipient);
+        _receivedTokens[receiver].add(tokenId);
+        _tokenReceivers[tokenId].add(receiver);
 
-        emit Transfer(from, recipient, tokenId);
-    }
-
-    /**
-     * @dev Burns all the Soulbound Cards associated with a Business Card tokenId
-     */
-    function burnAllSoulboundCards(uint256 tokenId) external { 
-        require(
-            msg.sender == address(bCard) || _isApprovedOrOwner(msg.sender, tokenId),
-            "SCARD: caller is not BCARD nor owner nor approved for all"   
-        );
-        // To clean an EnumerableSet, we remove all elements one by one
-        // @dev: is there a better way to do this? I found no way to simply reinitialize the set,
-        // and removing one by one can become very expensive / impossible due to block size limits
-        address[] memory cardReceivers = _tokenReceivers[tokenId].values();
-        for (uint256 i = 0; i < cardReceivers.length; ++i) {
-            address receiver = _tokenReceivers[tokenId].at(i);
-            // Remove the Soulbound Card from the set of tokens address `receiver` received
-            _receivedTokens[receiver].remove(tokenId);
-            // Remove the address `receiver` from the set of receivers for the Soulbound Card `tokenId`
-            _tokenReceivers[tokenId].remove(receiver);
-        }
+        emit Transfer(from, receiver, tokenId);
     }
 
     /**
@@ -138,41 +119,75 @@ contract SoulboundCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumer
     function burnSoulboundCard(address receiver, uint256 toBurn) external {
         require(
             msg.sender == receiver || _isApprovedOrOwner(msg.sender, toBurn),
-            "SCARD: caller is not BCARD nor owner nor approved for all"   
+            "SCARD: caller is not owner nor approved"   
         );
-        require(_receivedTokens[receiver].remove(toBurn), "SCARD: token not in receiver's list");
+        require(_receivedTokens[receiver].contains(toBurn), "SCARD: token not in receiver's list");
+        _burnSoulboundCard(receiver, toBurn);
     }
 
     /**
-     * @dev Burns all the Soulbound Cards that were sent to the specified address
+     * @dev Burns a specific Soulbound Card that was sent to msg.sender
+     */
+    function _burnSoulboundCard(address receiver, uint256 toBurn) internal {
+        require(
+            // Remove the Soulbound Card from the set of tokens address `receiver` received
+            _receivedTokens[receiver].remove(toBurn)
+            &&
+            // Remove the address `receiver` from the set of receivers for the Soulbound Card `tokenId`
+            _tokenReceivers[toBurn].remove(receiver)
+            ,
+            "SCARD: token not on the set"
+        );
+        
+        emit Transfer(receiver, address(0), toBurn);
+    }
+
+    /**
+     * @dev Burns the specified Soulbound Cards associated with a Business Card `tokenId`
+     */
+    function burnSoulboundCardsOfToken(uint256 tokenId, address[] calldata toBurn) external { 
+        require(
+            msg.sender == address(bCard) || _isApprovedOrOwner(msg.sender, tokenId),
+            "SCARD: caller is not BCARD contract nor owner nor approved"   
+        );
+        // To clean an EnumerableSet, we remove all elements one by one
+        for (uint256 i = 0; i < toBurn.length; i++) {
+            address receiver = toBurn[i];
+            _burnSoulboundCard(receiver, tokenId);
+        }
+    }
+    
+    /**
+     * @dev Burns the specified Soulbound Cards associated with a Business Card `tokenId`
+     */
+    function burnAllSoulboundCardsOfToken(uint256 tokenId) external { 
+        require(
+            msg.sender == address(bCard) || _isApprovedOrOwner(msg.sender, tokenId),
+            "SCARD: caller is not BCARD contract nor owner nor approved"   
+        );
+        // To clean an EnumerableSet, we remove all elements one by one
+        address[] memory toBurn = _tokenReceivers[tokenId].values();
+        for (uint256 i = 0; i < toBurn.length; i++) {
+            address receiver = toBurn[i];
+            _burnSoulboundCard(receiver, tokenId);
+        }
+    }
+    
+
+    /**
+     * @dev Burns all the Soulbound Cards that were sent to the specified address `toDisable`
      * Caller must be the specified address or an approved operator
      */
-    function burnAllReceivedSoulboundCardsForAddress(address toDisable) external {
-        require(isApprovedForAll(toDisable, msg.sender), "SCARD: caller is not owner nor approved for all");
-        _burnAllReceivedSoulboundCardsForAddress(toDisable);
-    }
-
-    /**
-     * @dev Burns all the Soulbound Cards that were sent to msg.sender
-     */
-    function burnAllReceivedSoulboundCards() external {
-        _burnAllReceivedSoulboundCardsForAddress(msg.sender);
-    }
-
-    /**
-     * @dev Burns all the Soulbound Cards that were sent to msg.sender
-     */
-    function _burnAllReceivedSoulboundCardsForAddress(address toDisable) internal {
+    function burnReceivedSoulboundCards(address receiver, uint256[] calldata toBurn) external {
+        require(
+            msg.sender == receiver || isApprovedForAll(receiver, msg.sender)
+            , 
+            "SCARD: caller is not receiver nor approved for all"
+        );
         // To clean an EnumerableSet, we remove all elements one by one
-        // @dev: is there a better way to do this? I found no way to simply reinitialize the set,
-        // and removing one by one can become very expensive / impossible due to block size limits
-        uint256[] memory receivedCards = _receivedTokens[toDisable].values();
-        for (uint256 i = 0; i < receivedCards.length; ++i) {
-            uint256 cardId = _receivedTokens[toDisable].at(i);
-            // Removes the Soulbound Card from the set of tokens address `toDisable` received
-            _receivedTokens[toDisable].remove(cardId);
-            // Removes the address `toDisable` from the set of receivers for this Soulbound Card `cardId`
-            _tokenReceivers[cardId].remove(toDisable);
+        for (uint256 i = 0; i < toBurn.length; ++i) {
+            uint256 cardId = toBurn[i];
+            _burnSoulboundCard(receiver, cardId);
         }
     }
 
@@ -181,22 +196,15 @@ contract SoulboundCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumer
      * Caller must be the specified address or an approved operator
      */
     function disableSoulboundCardsForAddress(address toDisable) external {
-        require(isApprovedForAll(toDisable, msg.sender), "SCARD: caller is not owner nor approved for all");
-        _disableSoulboundCardsForAddress(toDisable);
-    }
-
-    /**
-     * @dev Blacklists msg.sender from receiving any additional sCards
-     */
-    function disableSoulboundCards() external {
-        _disableSoulboundCardsForAddress(msg.sender);
-    }
-
-    /**
-     * @dev Blacklists the specified address from receiving any additional sCards
-     */
-    function _disableSoulboundCardsForAddress(address toDisable) internal {
+        require(msg.sender == toDisable || isApprovedForAll(toDisable, msg.sender), "SCARD: caller is not owner nor approved for all");
         _blacklistedReceivers[toDisable] = true;
+    }
+
+    /**
+     * @dev Returns if address `receiver` is blacklisted from getting Soulbound Cards 
+     */
+    function isBlacklisted(address receiver) external view returns (bool blacklisted) {
+        blacklisted = _blacklistedReceivers[receiver];
     }
 
     /**
@@ -204,13 +212,6 @@ contract SoulboundCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumer
      */
     function tokenURI(uint256 tokenId) external view override returns (string memory) {
         return bCard.tokenURI(tokenId);
-    }
-
-    /**
-     * @dev Returns the stats of a Soulbound Card, which are linked to the corresponding Business Card
-     */
-    function tokenStats(uint256 tokenId)  external view returns (BusinessCard.Card memory) {
-        return bCard.tokenStats(tokenId);
     }
     
     /**
@@ -255,11 +256,18 @@ contract SoulboundCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumer
     }
 
     /**
-     * @dev Returns the list of addresses that received a copy of a given tokenId Business Card
+     * @dev Returns the list of addresses that received a copy of a given `tokenId` Business Card
      * as a Soulbound Card
      */
     function soulboundCardReceivers(uint256 tokenId) public view returns (address[] memory) {
         return _tokenReceivers[tokenId].values();
+    }
+
+    /**
+     * @dev Returns the list of Soulbound Cards that an address `receiver` got
+     */
+    function receivedSoulboundCards(address receiver) public view returns (uint256[] memory) {
+        return _receivedTokens[receiver].values();
     }
 
     /**

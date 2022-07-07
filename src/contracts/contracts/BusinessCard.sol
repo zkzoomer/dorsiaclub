@@ -20,7 +20,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract ISoulboundCard {
 
-    function burnCards(uint tokenId) external { }
+    function burnAllSoulboundCardsOfToken(uint256 tokenId) external { }
 
 } 
 
@@ -192,7 +192,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev Calls the oracle to update a certain token URI with the newly defined Card struct
      */
     function _updateTokenURI(uint256 _tokenId, uint256 _genes, string calldata _cardName, CardProperties calldata _cardProperties) internal {
-        require(saleStarted == true, "Sale not started or paused");
         require(_exists(_tokenId));
         // Calls for updating the token can only be made if it is not being processed already
         require(requests[_tokenId] == false, "Update being processed");
@@ -219,6 +218,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev Mints a new NFT Business Card
      */
     function getCard(string calldata _cardName, CardProperties calldata _cardProperties) public payable {
+        require(saleStarted == true);  // dev: sale not started or paused, can be managed on frontend
         require(totalSupply() < maxSupply);  // dev: sale has ended, can be managed on frontend
         require(msg.value >= _mintPrice);  // dev: value sent is below the price, can be managed on frontend
         // Minting a new NFT with the name and position provided
@@ -273,7 +273,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * User can change both name and position, just the name, or just the position (by leaving those inputs empty)
      */
     function updateCard(uint256 tokenId, string calldata newName, CardProperties calldata newCardProperties) public payable {
-        require(saleStarted == true, "Updates paused");
+        require(saleStarted == true);  // dev: updates paused, can be managed on frontend
         require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved");
         require(
             isNameReserved(newName) == false &&
@@ -316,6 +316,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * cards, and prevent possible "name snipers"
      */
     function swapCards(uint256 tokenId1, uint256 tokenId2) public payable {
+        require(saleStarted == true);  // dev: updates paused, can be managed on frontend
         require(
             _isApprovedOrOwner(_msgSender(), tokenId1) &&
             _isApprovedOrOwner(_msgSender(), tokenId2), 
@@ -477,7 +478,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
      */
     function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual override returns (uint256) {
-        require(index < balanceOf(owner), "Index out of bounds");  // need it or keep it?
+        require(index < balanceOf(owner));  // @dev: index out of bounds
         return _holderTokens[owner].at(index);
     }
 
@@ -493,7 +494,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev See {IERC721Enumerable-tokenByIndex}.
      */
     function tokenByIndex(uint256 index) public view virtual override returns (uint256) {
-        require(index < totalSupply(), "Index out of bounds");  // need it or keep it?
+        require(index < totalSupply());  // @dev: index out of bounds
         (uint256 tokenId, ) = _tokenOwners.at(index);
         return tokenId;
     }
@@ -540,22 +541,23 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
 
     /**
      * @dev See {IERC721-transferFrom}.
+     *
+     * If the sCard smart contract was specified, it burns all Soulbound Cards associated 
+     * with the Business Card `tokenId` in the process
      */
     function transferFrom(address from, address to, uint256 tokenId) public virtual override {
         //solhint-disable-next-line max-line-length
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
-
-        _transfer(from, to, tokenId);
+        _transfer(from, to, tokenId, true);
     }
 
     /**
-     * @dev Transfer the token while also burning all the soulbound cards associated with it if specified
+     * @dev Works as `transferFrom`, but will not burn the associated Soulbound Cards 
      */
-    function transferFrom(address from, address to, uint256 tokenId, bool burn) public virtual {
-        if (burn) {
-            sCard.burnCards(tokenId);
-        }
-        transferFrom(from, to, tokenId);
+    function transferFromWithoutBurn(address from, address to, uint256 tokenId) public virtual {
+        //solhint-disable-next-line max-line-length
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
+        _transfer(from, to, tokenId, false);
     }
 
     /**
@@ -592,7 +594,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * Emits a {Transfer} event.
      */
     function _safeTransfer(address from, address to, uint256 tokenId, bytes memory _data) internal virtual {
-        _transfer(from, to, tokenId);
+        _transfer(from, to, tokenId, true);
         require(_checkOnERC721Received(from, to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
@@ -655,9 +657,14 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      *
      * Emits a {Transfer} event.
      */
-    function _transfer(address from, address to, uint256 tokenId) internal virtual {
+    function _transfer(address from, address to, uint256 tokenId, bool burn) internal virtual {
         require(ownerOf(tokenId) == from, "ERC721: transfer of token that is not own"); // internal owner
         require(to != address(0), "ERC721: transfer to the zero address");
+
+        // Burn the associated Soulbound Cards
+        if (address(sCard) != address(0) && burn) {
+            sCard.burnAllSoulboundCardsOfToken(tokenId);
+        }
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId);

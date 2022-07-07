@@ -114,7 +114,7 @@ for (const k of Object.getOwnPropertyNames(INTERFACES)) {
 function shouldSupportInterfaces (interfaces = []) {
   describe('ERC165', function () {
     beforeEach(function () {
-      this.contractUnderTest = this.mock || this.token || this.holder || this.accessControl;
+      this.contractUnderTest = this.mock || this.token || this.sCard || this.holder || this.accessControl;
     });
 
     it('supportsInterface uses less than 30k gas', async function () {
