@@ -6,7 +6,8 @@
     "hardhat-contract-sizer": "^2.6.1",
     "hardhat-gas-reporter": "^1.0.8",
     "install": "^0.13.0",
-    "npm": "^8.13.2"
+    "npm": "^8.13.2",
+    "truffle": "^5.5.21"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",

@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 class Card():
 
-    def __init__(self, tokenId, name, position, genes):
+    def __init__(self, tokenId, name, position, genes, properties):
         """Used for generating new Business Card images, and altering existing templates
 
         Parameters:
@@ -29,9 +29,6 @@ class Card():
                 [22:24]: gold edges
                 [24:26]: washed
                 [26:30]: phone number
-
-        Attributes:
-
         """
 
         # Different attributes that make up the card
@@ -77,16 +74,16 @@ class Card():
                 99: 'White'
             },
             'Font': {
-                4: 'Dorsian Sea', 
+                4: 'Dorsian Sea',  # 5%
                 14: 'Port Carruthers',
                 24: 'Silian Rail',
                 34: 'Romalian Type',
                 44: 'Pale Nimbus',
                 54: 'Esoteric Antiqua',
-                59: 'Century Block', 
-                74: 'Bookman Type', 
+                59: 'Century Block',  # 5%
+                74: 'Bookman Type',  # 15%
                 84: 'Babylon Script',
-                99: 'Royal Script'
+                99: 'Royal Script'  # 15%
             },
             'Location': {
                 14: 'Golden Bullrun',
@@ -157,6 +154,8 @@ class Card():
         # Gets the attributes from the genes, and validate them afterwards
         self._attributes = self._get_attributes(self.genes)
         self.attributes = self._validate_attributes()
+        # Card properties, which are directly added to the metadata
+        self.properties = properties
 
         # Card, program will be adding layers until completion -- initializing variable
         self.card = None
@@ -544,14 +543,15 @@ class Card():
         The name and description fields are different for every token would be shown in the marketplace, and thus, in 
         a way, follow a similar structure to the name - position structure defined for the Business Card
         """
-        
+        #
         metadata = {
             "id": self.tokenId,
             "name": "Dorsia Club",
             "description": "Because every self-respected businessman needs a business card.",
             "card_name": self.name,
             "card_position": self.position,
-            "external_url": "https://dorsiaclub.biz/card/{}".format(self.tokenId),
+            "card_properties": self.properties,
+            "external_url": "https://dorsiaclub-testnet.netlify.app/card/{}".format(self.tokenId),
             "image": image_url,
             "thumbnail": thumbnail_url,
             "attributes": self.attributes  # TODO: check standard for having SPECIAL ATTRIBUTES added to metadata
@@ -632,12 +632,12 @@ if __name__ == '__main__':
     path = newcardwhatdoyouthink._save_image(seed)"""
 
     # Generating one equal card for each font
-    attributes = {'Setting': 'Connemara Marble', 'Paper': 'Rail Stamped', 'Coloring': 'White', 'Font': 'Royal Script',
+    """attributes = {'Setting': 'Connemara Marble', 'Paper': 'Rail Stamped', 'Coloring': 'White', 'Font': 'Royal Script',
                   'Location': 'Mergers and Acquisitions', 'Cranberry juice': None, 'Shadow': 'Focused shadow',
                   'Watermark': True, 'Footprint': None, 'Defaced': None, 'Special lettering': 'Silver lettering',
                   'Gold edges': True, 'Washed': False, 'Phone number': 1488}
     fonts = ['Dorsian Sea', 'Port Carruthers', 'Silian Rail', 'Romalian Type', 'Pale Nimbus', 'Esoteric Antiqua',
-             'Century Block', 'Bookman Type', 'Babylon Script', 'Royal Script']
+             'Century Block', 'Bookman Type', 'Babylon Script', 'Royal Script']"""
 
     """for font in fonts:
         newcardwhatdoyouthink = Card(1, 'Patrick BATEMAN', 'Vice President', seed)
@@ -674,9 +674,9 @@ if __name__ == '__main__':
         path = newcardwhatdoyouthink._save_image(str(i))"""
 
     # Generating assets for landing page
-    names_positions = [
+    """names_positions = [
         ['Satoshi NAKAMOTO', 'CEO of Bitcoin'],
-        ['Deenz', 'CEO of Dorsia Club'],
+        ['El Dip', 'CEO of Dorsia Club'],
         ['Nayib BUKELE', 'El Presidente'],
         ['Peter SCHIFF', 'CEO of Gold'],
         ['Michael SAYLOR', 'Micro Tragedy'],
@@ -718,5 +718,20 @@ if __name__ == '__main__':
         newcardwhatdoyouthink._generate_text()
         newcardwhatdoyouthink._generate_extras()
         path = newcardwhatdoyouthink._save_image(str(i))
-        i += 1
-
+        i += 1"""
+    seed = '244459387160448912949407232908'
+    camelCase_properties = {
+        "position": 'Vice President',
+        "twitterAccount": 'twitterAccount',
+        'telegramAccount': 'telegramAccount',
+        'telegramGroup':  'telegramGroup',
+        'discordAccount': '123456789012345678',
+        'discordGroup': 'discordGroup',
+        'githubUsername': 'githubUsername',
+        'userWebsite.com': 'userWebsite.com'
+    }
+    properties = {'position': 'Vice President', 'twitter_account': 'twitterAccount', 'telegram_account': 'telegramAccount', 'telegram_group': 'telegramGroup', 'discord_account': '123456789012345678', 'discord_group': 'discordGroup', 'github_username': 'githubUsername', 'user_website.com': 'userWebsite.com'}
+    properties = {'twitter_account': '', 'telegram_account': '', 'telegram_group': '', 'discord_account': 0, 'discord_group': '', 'github_username': '', 'user_website.com': ''}
+    newcardwhatdoyouthink = Card(1, 'Patrick Bateman', 'Vice President', seed, properties)
+    tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
+    print(tokenURI)

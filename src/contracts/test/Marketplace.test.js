@@ -43,7 +43,7 @@ describe('Contract: Marketplace', function () {
 
   async function mintTokenAndCreateMarketItem (tokenId, price, name = firstToken[0], properties = firstToken[1], account = seller) {
     await bCard.connect(account).getCard(name, properties, {value: mintPrice})
-    await bCard.connect(oracle).callback(tokenId, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(tokenId, oracleCallbackTokenURI)
     await bCard.connect(account).setApprovalForAll(marketplaceContract.address, true)
     return marketplaceContract.connect(account).createMarketItem(tokenId, price)
   }
@@ -75,14 +75,14 @@ describe('Contract: Marketplace', function () {
 
     // Account1 mints a token and puts it up for sale
     await bCard.connect(seller).getCard(firstToken[0], firstToken[1], { value: mintPrice })
-    await bCard.connect(oracle).callback(1, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(1, oracleCallbackTokenURI)
     await bCard.connect(seller).approve(marketplaceContract.address, token1id)
     await marketplaceContract.connect(seller).createMarketItem(token1id, price)
 
     // Account2 buys the token
     const token1marketItemId = 1
     await marketplaceContract.connect(buyer).createMarketSale(token1marketItemId, secondToken[0], secondToken[1], { value: BigInt(price) + BigInt(oracleFee) })
-    await bCard.connect(oracle).callback(1, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(1, oracleCallbackTokenURI)
 
     // Account 2 puts token 1 for sale
     await bCard.connect(buyer).approve(marketplaceContract.address, token1id)
@@ -139,15 +139,15 @@ describe('Contract: Marketplace', function () {
     await bCard.connect(seller).getCard(firstToken[0], firstToken[1], { value: mintPrice })
     await bCard.connect(seller).getCard(secondToken[0], secondToken[1], { value: mintPrice })
     await bCard.connect(seller).setApprovalForAll(marketplaceContract.address, true)
-    await bCard.connect(oracle).callback(1, oracleCallbackTokenURI)
-    await bCard.connect(oracle).callback(2, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(1, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(2, oracleCallbackTokenURI)
     await marketplaceContract.connect(seller).createMarketItem(token1id, price)
     await marketplaceContract.connect(seller).createMarketItem(token2id, price)
 
     // Account 2 buys token 1
     const token1marketItemId = 1
     await marketplaceContract.connect(buyer).createMarketSale(token1marketItemId, thirdToken[0], thirdToken[1], { value: BigInt(price) + BigInt(oracleFee) })
-    await bCard.connect(oracle).callback(1, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(1, oracleCallbackTokenURI)
 
     // Account 2 puts token 1 for sale
     await bCard.connect(buyer).approve(marketplaceContract.address, token1id)
@@ -276,7 +276,7 @@ describe('Contract: Marketplace', function () {
     const price = ethers.utils.parseEther('10')
     await mintTokenAndCreateMarketItem(1, price)
     await bCard.connect(seller).getCard(secondToken[0], secondToken[1], { value: mintPrice })
-    await bCard.connect(oracle).callback(2, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(2, oracleCallbackTokenURI)
 
     // Try -- will fail
     expect(bCard.connect(seller).updateCard(1, fourthToken[0], fourthToken[1], { value: updatePrice }))
@@ -289,7 +289,7 @@ describe('Contract: Marketplace', function () {
 
     // Sale proceeds normally -- can update tokens now
     await marketplaceContract.connect(seller).createMarketSale(1, thirdToken[0], thirdToken[1], { value: BigInt(price) + BigInt(oracleFee) })
-    await bCard.connect(oracle).callback(1, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(1, oracleCallbackTokenURI)
     await bCard.connect(seller).updateCard(1, fourthToken[0], fourthToken[1], { value: updatePrice })
   })
 
@@ -302,7 +302,7 @@ describe('Contract: Marketplace', function () {
     
     const price = ethers.utils.parseEther('10')
     await bCard.connect(seller).getCard(firstToken[0], firstToken[1], {value: mintPrice})
-    await bCard.connect(oracle).callback(1, oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback(1, oracleCallbackTokenURI)
     await bCard.connect(seller).setApprovalForAll(marketplaceContract.address, true)
     await marketplaceContract.connect(seller).createMarketItem(1, price)
 
@@ -328,7 +328,7 @@ describe('Contract: Marketplace', function () {
       .to.be.revertedWith("Marketplace is paused")
 
     await bCard.connect(seller).getCard(secondToken[0], secondToken[1], {value: mintPrice})
-    await bCard.connect(oracle).callback('2', oracleCallbackTokenURI)
+    await bCard.connect(oracle).updateCallback('2', oracleCallbackTokenURI)
     expect(marketplaceContract.connect(seller).createMarketItem('2', price))
       .to.be.revertedWith("Marketplace is paused")
 

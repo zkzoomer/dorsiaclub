@@ -143,12 +143,12 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 it('previous oracle cannot update tokens', async function () {
                     // performing a callback
                     await expectRevert.unspecified(
-                        this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                        this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                     )
                 })
 
                 it('new oracle can update tokens', async function () {
-                    await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: altOracle });
+                    await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: altOracle });
                     // now when retrieving the tokenURI, it should be equal to baseURI + oracleCallbackTokenURI
                     expect(await this.token.tokenURI(new BN('1'))).to.be.equal(baseURI + oracleCallbackTokenURI);
                 })
@@ -184,22 +184,22 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                     await expectRevert.unspecified(
                         this.token.updateCard(new BN('1'), secondToken[0], secondToken[1], { from: buyer1, value: oraclePrice})
                     )
-                    expect(await this.token._updatePrice()).to.be.bignumber.equal(newUpdatePrice)
+                    expect(await this.token.updatePrice()).to.be.bignumber.equal(newUpdatePrice)
                     // First clear the pending update request
-                    await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle });
+                    await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle });
                     // Now can change without problem
                     await this.token.updateCard(new BN('1'), secondToken[0], secondToken[1], { from: buyer1, value: newUpdatePrice})
                 })
 
                 it('can be changed back to original price', async function () {
                     await this.token.modifyUpdatePrice(updatePrice, { from: owner })
-                    expect(await this.token._updatePrice()).to.be.bignumber.equal(updatePrice)
+                    expect(await this.token.updatePrice()).to.be.bignumber.equal(updatePrice)
                 })
             })
         })
 
 
-        describe('callback', function () {
+        describe('_callback', function () {
             beforeEach(async function () {
                 // mints a card to be updated
                 await this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice});
@@ -207,19 +207,19 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
 
             it('cannot be called on non requested updates', async function () {
                 await expectRevert.unspecified(
-                    this.token.callback(new BN('2'), oracleCallbackTokenURI, { from: oracle })
+                    this.token.updateCallback(new BN('2'), oracleCallbackTokenURI, { from: oracle })
                 )
             })
 
             it('changes the tokenURI', async function () {
-                await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle });
+                await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle });
                 // now when retrieving the tokenURI, it should be equal to baseURI + oracleCallbackTokenURI
                 expect(await this.token.tokenURI(new BN('1'))).to.be.equal(baseURI + oracleCallbackTokenURI);
             })
 
             context('once updated', function () {
                 beforeEach(async function () {
-                    tx = await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                    tx = await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                 })
 
                 it('removes the request associated with the tokenId', async function () {
@@ -228,6 +228,35 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
 
                 it('emits a TokenURIUpdated event', async function () {
                     expectEvent(tx, 'TokenURIUpdated', { tokenId: new BN('1'), tokenURI: oracleCallbackTokenURI });
+                })
+            })
+
+            context('after a swapCards event', function () {
+                const callback1 = 'one';
+                const callback2 = 'two';
+                let tx;
+
+                beforeEach(async function () {
+                    await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                    await this.token.getCard(secondToken[0], secondToken[1], { from: buyer1, value: mintPrice});
+                    await this.token.updateCallback(new BN('2'), oracleCallbackTokenURI, { from: oracle })
+                    await this.token.swapCards('1', '2', { from: buyer1, value: updatePrice })
+                    tx = await this.token.swapCallback('1', '2', callback1, callback2, { from: oracle })
+                })
+
+                it('updates the token URIs accordingly', async function () {
+                    expect(await this.token.tokenURI('1')).to.be.equal(baseURI + callback1)
+                    expect(await this.token.tokenURI('2')).to.be.equal(baseURI + callback2)
+                })
+
+                it('removes the requests associated with the tokens', async function () {
+                    expect(await this.token.requests(new BN('1'))).to.be.false
+                    expect(await this.token.requests(new BN('2'))).to.be.false
+                })
+
+                it('emits two TokenURIUpdated event', async function () {
+                    expectEvent(tx, 'TokenURIUpdated', { tokenId: new BN('1'), tokenURI: callback1 });
+                    expectEvent(tx, 'TokenURIUpdated', { tokenId: new BN('2'), tokenURI: callback2 });
                 })
             })
         })
@@ -406,7 +435,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
             beforeEach(async function () {
                 // Mints a token to change name and or position of, and performs the update
                 await this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice })
-                await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
             })
 
             it('cannot update if sale is paused', async function () {
@@ -431,11 +460,11 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 await this.token.setApprovalForAll(operator, true, { from: buyer1 });
                 // A call to change name from these should clear
                 await this.token.updateCard('1', emptyUpdate[0], emptyUpdate[1], { from: buyer1, value: updatePrice })
-                await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                 await this.token.updateCard('1', emptyUpdate[0], emptyUpdate[1], { from: approved, value: updatePrice })
-                await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                 await this.token.updateCard('1', emptyUpdate[0], emptyUpdate[1], { from: operator, value: updatePrice })
-                await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                 // But a call from a non approved will not
                 await expectRevert(
                     this.token.updateCard('1', emptyUpdate[0], emptyUpdate[1], { from: buyer2, value: updatePrice })
@@ -457,7 +486,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 )
                 // But these clear
                 await this.token.updateCard('1', 'Paul ALLEN', emptyUpdate[1], { from: buyer1, value: updatePrice })
-                await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                 await this.token.updateCard('1', emptyUpdate[0], emptyUpdate[1], { from: buyer1, value: updatePrice })
             })
 
@@ -474,7 +503,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 )
                 // But these clear
                 await this.token.updateCard('1', emptyUpdate[0], ['President', '', '', '', 0, '', '', ''], { from: buyer1, value: updatePrice })  // Finally made it
-                await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                 await this.token.updateCard('1', emptyUpdate[0], emptyUpdate[1], { from: buyer1, value: updatePrice })
             })
 
@@ -585,9 +614,9 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
             beforeEach(async function () {
                 // Mints two tokens to change name and or position of, and performs the updates
                 await this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice })
-                await this.token.callback('1', oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback('1', oracleCallbackTokenURI, { from: oracle })
                 await this.token.getCard(secondToken[0], secondToken[1], { from: buyer1, value: mintPrice })
-                await this.token.callback('2', oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback('2', oracleCallbackTokenURI, { from: oracle })
             })
 
             it('cannot update if sale is paused', async function () {
@@ -613,14 +642,11 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 await this.token.setApprovalForAll(operator, true, { from: buyer1 });
                 // A call to swap names from these should clear
                 await this.token.swapCards('1', '2', { from: buyer1, value: updatePrice })
-                await this.token.callback('1', oracleCallbackTokenURI, { from: oracle })
-                await this.token.callback('2', oracleCallbackTokenURI, { from: oracle })
+                await this.token.swapCallback('1', '2', oracleCallbackTokenURI, oracleCallbackTokenURI, { from: oracle })
                 await this.token.swapCards('1', '2', { from: approved, value: updatePrice })
-                await this.token.callback('1', oracleCallbackTokenURI, { from: oracle })
-                await this.token.callback('2', oracleCallbackTokenURI, { from: oracle })
+                await this.token.swapCallback('1', '2', oracleCallbackTokenURI, oracleCallbackTokenURI, { from: oracle })
                 await this.token.swapCards('1', '2', { from: operator, value: updatePrice })
-                await this.token.callback('1', oracleCallbackTokenURI, { from: oracle })
-                await this.token.callback('2', oracleCallbackTokenURI, { from: oracle })
+                await this.token.swapCallback('1', '2', oracleCallbackTokenURI, oracleCallbackTokenURI, { from: oracle })
                 // But a call from a non approved will not
                 await expectRevert(
                     this.token.swapCards('1', '2', { from: buyer2, value: updatePrice })
@@ -665,7 +691,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                     "Update being processed"
                 )
                 // With tokenId2 being processed
-                await this.token.callback('1', oracleCallbackTokenURI, { from: oracle }) // clear the update request
+                await this.token.updateCallback('1', oracleCallbackTokenURI, { from: oracle }) // clear the update request
                 await this.token.updateTokenURI('2', secondToken[0], secondToken[1], { from: owner }) // now token two is being processed
                 await expectRevert(
                     this.token.swapCards('1', '2', { from: buyer1, value: updatePrice })
@@ -695,7 +721,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                     let end_balance = BigInt(await web3.eth.getBalance(oracle))
                     let balance_gain = end_balance - start_balance
                     // Gain in balance should be equal to the amount of funds being sent to the oracle
-                    expect(balance_gain).to.be.equal(BigInt(2 * oraclePrice))
+                    expect(balance_gain).to.be.equal(BigInt(oraclePrice))
                 })
     
                 it('emits a SwapRequest event', async function () {
@@ -712,7 +738,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
             beforeEach(async function () {
                 // Mints a new token and updates its URI - so that now an update request can be made
                 await this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice })
-                await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
             })
 
             it('can be called with sale is paused', async function () {
@@ -723,6 +749,18 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
             it('cannot update non-existing tokens', async function () {
                 await expectRevert.unspecified(
                     this.token.updateTokenURI('3', thirdToken[0], thirdToken[1], { from: owner })
+                )
+            })
+
+            it('cannot give non valid values for other properties', async function () {
+                const nonValid = ['Vice President', '1234567890123456', 'telegramAccount', 'telegramGroup', '123456789012345678', 'discordGroup', 'githubUsername', 'userWebsite.com']
+                await expectRevert.unspecified(
+                    this.token.updateTokenURI('1', thirdToken[0], nonValid, { from: owner })
+                )
+
+                const nonValid2 = ['Vice President', 'twitterAccount', 'telegramAccount', 'telegramGroup', '1234567890123456789', 'discordGroup', 'githubUsername', 'userWebsite.com']
+                await expectRevert.unspecified(
+                    this.token.updateTokenURI('1', thirdToken[0], nonValid2, { from: owner })
                 )
             })
 
@@ -760,7 +798,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 expect(previousURI).to.be.equal(baseURI + oracleCallbackTokenURI)
                 // New callback changes the tokenURI
                 await this.token.updateTokenURI('1', firstToken[0], firstToken[1], { from: owner })
-                await this.token.callback(new BN('1'), altOracleCallbackTokenURI, { from: oracle })
+                await this.token.updateCallback(new BN('1'), altOracleCallbackTokenURI, { from: oracle })
                 let newURI = await this.token.tokenURI('1')
                 expect(previousURI).to.not.be.equal(newURI)
                 expect(newURI).to.be.equal(baseURI + altOracleCallbackTokenURI)
@@ -788,7 +826,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 })
 
                 it('returns base + corresponding tokenURI if updated', async function () {
-                    await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                    await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                     expect(await this.token.requests(new BN('1'))).to.be.false;
                     expect(await this.token.tokenURI(new BN('1'))).to.be.equal(baseURI + oracleCallbackTokenURI);
                 })
@@ -861,7 +899,7 @@ function shouldBehaveLikeBusinessCard (baseURI, defaultURI, owner, oracle, altOr
                 beforeEach(async function () {
                     // minting and updating a card first for following tests
                     await this.token.getCard(firstToken[0], firstToken[1], { from: buyer1, value: mintPrice })
-                    await this.token.callback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
+                    await this.token.updateCallback(new BN('1'), oracleCallbackTokenURI, { from: oracle })
                     // pausing sale
                     await this.token.pauseSale({ from: owner })
                 })

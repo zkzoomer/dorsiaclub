@@ -6,9 +6,9 @@ const BusinessCard = artifacts.require('BusinessCard');
 
 contract('Business Card', function (accounts) {
   const name = 'Business Card';
-  const symbol = 'CARD';
-  const baseURI = 'https://gateway.pinata.cloud/ipfs/';
-  const defaultURI = 'QmPEe7JFEWUFAkoR8b5sPe85ni9DThALTAKnGCfLaHtm1h';
+  const symbol = 'BCARD';
+  const baseURI = 'https://gateway.pinata.cloud/ipfs/Qm';
+  const defaultURI = 'bFp3rybuvZ7j9e4xB6WLedu8gvLcjbVqUrGUEugQWz9u';
 
   beforeEach(async function () {
       // Deploying the contract first

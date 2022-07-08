@@ -5,10 +5,6 @@ import json
 import os
 from card import Card
 from web3 import Web3
-from hdwallet import BIP44HDWallet
-from hdwallet.cryptocurrencies import EthereumMainnet
-from hdwallet.derivations import BIP44Derivation
-from hdwallet.utils import generate_mnemonic
 from web3 import Web3
 from web3._utils.filters import construct_event_filter_params
 from web3._utils.events import get_event_data
@@ -16,14 +12,9 @@ from web3.middleware import geth_poa_middleware
 from os.path import exists
 from typing import Optional
 
-
-
 # Connecting to the web3 provider
 RPC = ''
 web3 = Web3(Web3.HTTPProvider(RPC))
-
-
-
 
 
 class ListeningOracle():
@@ -48,8 +39,7 @@ class ListeningOracle():
             self.web3 = Web3(Web3.WebsocketProvider(card_contract['provider']))
         self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-
-        with open('../contracts/BusinessCard/build/contracts/BusinessCard.json') as f:
+        with open('./doc/BusinessCard.json') as f:
             cardABI = json.load(f)['abi']  # Reading the provided Card contract ABI
             f.close()
         card_addy = card_contract['addy']
@@ -61,17 +51,17 @@ class ListeningOracle():
             self.last_block = int(f.read())
             f.close()
 
+        # Minimum waiting time between managing updates, in seconds
+        self.wait_time = 5
+        # Time waited between sending OK-status messages, in seconds
+        self.message_wait_time = 60 * 60
+
         # Admin Telegram chat
         with open('./doc/TELEGRAM_API.json') as f:
             data = json.load(f)
             self.bot_token = data['PRIVATE_BOT_API_TOKEN']
             self.channel_id = data['PRIVATE_CHANNEL_ID']
             f.close()
-
-        # Minimum waiting time between managing updates, in seconds
-        self.wait_time = 5
-        # Time waited between sending OK-status messages to admin telegram chat, in seconds
-        self.message_wait_time = 60*60
 
         # Read the sneedphrase from the txt file, or generate one if none exists prior
         try:
@@ -85,7 +75,7 @@ class ListeningOracle():
                 f.write(self.sneed)
                 f.close()
 
-        # Get the wallet addy for the first pkey and save it into a file if it does not already exist
+        """# Get the wallet addy for the first pkey and save it into a file if it does not already exist
         bip44_hdwallet: BIP44HDWallet = BIP44HDWallet(cryptocurrency=EthereumMainnet)
         # Get Ethereum BIP44HDWallet from mnemonic
         bip44_hdwallet.from_mnemonic(mnemonic=self.sneed, language="english")
@@ -98,30 +88,33 @@ class ListeningOracle():
         )
         # Drive Ethereum BIP44HDWallet
         bip44_hdwallet.from_path(path=bip44_derivation)
-        # Get address and private_key
-        self.addy = bip44_hdwallet.address()
-        self.pkey = bip44_hdwallet.private_key()
-        # Clean derivation indexes/paths
-        bip44_hdwallet.clean_derivation()
+        # Get address and private_key"""
 
-        # Saving addy in a file to then get it whitelisted in the Card smart contract -- this gets done every execution
-        with open('./doc/addy.txt', 'w') as f:
-            f.write(self.addy)
-            f.close()
-        # Also saving the pkey for development purposes
-        with open('./doc/pkey.txt', 'w') as f:
-            f.write(self.pkey)
-            f.close()
+        # TEMPORARY FIX
+        with open('./doc/pkey.txt', 'r') as f:
+            self.pkey = f.read()
+        with open('./doc/addy.txt', 'r') as f:
+            self.addy = f.read()
+
+        """self.addy = bip44_hdwallet.address()
+        self.pkey = bip44_hdwallet.private_key()
+        print(self.pkey)
+        # Clean derivation indexes/paths
+        bip44_hdwallet.clean_derivation()"""
 
         # Starting nonce, program will add to it sequentially
-        print('getting noncè')
         self.nonce = self.web3.eth.get_transaction_count(self.addy, "pending")
-        print('nonce gottten')
+
+        """# Saving addy in a file to then get it whitelisted in the Card smart contract -- this gets done every execution
+        with open('./doc/addy.txt', 'w') as f:
+            f.write(self.addy)
+        # Also saving the pkey for development purposes
+        with open('./doc/pkey.txt', 'w') as f:
+            f.write(self.pkey)"""
 
     # https://cryptomarketpool.com/how-to-listen-for-ethereum-events-using-web3-in-python/
 
-    async def _handle_event(self, event_data):
-
+    async def _handle_update_event(self, event_data):
         # Take the values from the event
         tokenId = event_data['tokenId']  # Returns an int
 
@@ -129,22 +122,48 @@ class ListeningOracle():
         if not self.contract.functions.requests(tokenId).call():
             return  # Token was already updated, trying to do so again would revert
 
-        name = event_data['name']  # Returns a string
-        position = event_data['position']  # Returns a string
-        genes = str(event_data['genes'])  # Returns an int, converted to string
+        # Check current values for properties
+        current_uri = self.contract.functions.tokenURI(tokenId).call()
+        current_metadata = requests.get(current_uri).json()
+        current_properties = current_metadata['card_properties']
+
+        # Fetch properties from the event
+        name = event_data['name']
+        position = event_data['cardProperties'][0]
+        event_properties = {
+            'twitter_account': event_data['cardProperties'][1],
+            'telegram_account': event_data['cardProperties'][2],
+            'telegram_group': event_data['cardProperties'][3],
+            'discord_account': event_data['cardProperties'][4],
+            'discord_group': event_data['cardProperties'][5],
+            'github_username': event_data['cardProperties'][6],
+            'website': event_data['cardProperties'][7]
+        }
+        genes = str(event_data['genes'])
         # Genes formatted to add leading zeros to 26 characters, else the Card class will throw
         for i in range(26 - len(genes)):
             genes = '0' + genes
 
-        # Generates the new Card URI and gets the hash
-        newcardwhatdoyouthink = Card(tokenId, name, position, genes)
+        # Contrast, keep those properties where new is ""/0, update those with values
+        if position == "":
+            position = current_metadata['card_position']
+        new_properties = {}
+        for dict_key, dict_value in event_properties.items():
+            if dict_value == "" or dict_value == 0:
+                new_properties[dict_key] = current_properties[dict_key]
+            else:
+                new_properties[dict_key] = str(event_properties[dict_key])  # The discord account ID will be made string
+
+        # Use this name, position to generate a new card and get the ipfs hash
+        newcardwhatdoyouthink = Card(tokenId, name, position, genes, new_properties)
         tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
 
-        # Calls the Card contract callback function to finalize the update of this tokenURI
+        # Calls the Card contract updateCallback function to finalize the update of this tokenURI
         try:
-            callback = self.contract.functions.callback(
+            callback = self.contract.functions.updateCallback(
                 tokenId,
-                tokenURI[2:]  # First two characters of tokenURI are always 'Qm', and thus are taken off - found in baseURI
+                tokenURI[2:]
+                # First two characters of tokenURI are always 'Qm', and thus are taken off - found in baseURI
             ).buildTransaction({
                 'from': self.addy,
                 'nonce': self.nonce,
@@ -159,11 +178,12 @@ class ListeningOracle():
             signed_tx = self.web3.eth.account.sign_transaction(callback, self.pkey)
             # Send transaction
             tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
-            #print('signed and done: ', tx_hash.hex())
+            # print('signed and done: ', tx_hash.hex())
             # Inform on public telegram bot about successful update with the image that was stored by the Card class
+            # Inform admin of updated card
             req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                 botToken=self.bot_token, chatID=self.channel_id,
-                text='Just processed token {}'.format(tokenId)
+                text='updateCallback for token {}'.format(tokenId)
             )
             requests.post(req)
         except:
@@ -171,16 +191,9 @@ class ListeningOracle():
             # TODO: have a vairable to not update block if failed tx
             req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                 botToken=self.bot_token, chatID=self.channel_id,
-                text='Callback for token {}  failed, restarting'.format(tokenId)
+                text='updateCallback for token {}  failed, restarting'.format(tokenId)
             )
             requests.post(req)
-
-            # Removes the images from the disk
-            os.remove(image_path)
-            os.remove(thumbnail_path)
-            # Removes the card object from memory to save up $$$
-            del newcardwhatdoyouthink
-
             exit()
         finally:
             # Removes the images from the disk
@@ -188,14 +201,102 @@ class ListeningOracle():
             os.remove(thumbnail_path)
             # Removes the card object from memory to save up $$$
             del newcardwhatdoyouthink
-            
 
+    async def _handle_swap_event(self, event_data):
+        # Take the values from the event
+        tokenId1 = event_data['tokenId1']  # Returns an int
+        tokenId2 = event_data['tokenId2']  # Returns an int
+
+        # Check if event has already been handled by looking at the active requests in the contract
+        if not self.contract.functions.requests(tokenId1).call():
+            return  # Token was already updated, trying to do so again would revert
+        if not self.contract.functions.requests(tokenId2).call():
+            return  # Token was already updated, trying to do so again would revert
+
+        # Fetch genes from the event
+        genes1 = str(event_data['genes1'])
+        genes2 = str(event_data['genes2'])
+        # Genes formatted to add leading zeros to 26 characters, else the Card class will throw
+        for i in range(26 - len(genes1)):
+            genes1 = '0' + genes1
+        for i in range(26 - len(genes2)):
+            genes2 = '0' + genes2
+
+        # Check current values for name, position, and properties of both tokens
+        current_uri_1 = self.contract.functions.tokenURI(tokenId1).call()
+        current_metadata_1 = requests.get(current_uri_1).json()
+        current_name_1 = current_metadata_1['card_name']
+        current_position_1 = current_metadata_1['card_position']
+        current_properties_1 = current_metadata_1['card_properties']
+
+        current_uri_2 = self.contract.functions.tokenURI(tokenId2).call()
+        current_metadata_2 = requests.get(current_uri_2).json()
+        current_name_2 = current_metadata_2['card_name']
+        current_position_2 = current_metadata_2['card_position']
+        current_properties_2 = current_metadata_2['card_properties']
+
+        # Generate card one keeping genes but using card 2 name/properties
+        newcardwhatdoyouthink_1 = Card(tokenId1, current_name_2, current_position_2, genes1, current_properties_2)
+        tokenURI_1, image_path_1, thumbnail_path_1 = newcardwhatdoyouthink_1.get_tokenURI_hash()
+
+        newcardwhatdoyouthink_2 = Card(tokenId2, current_name_1, current_position_1, genes2, current_properties_1)
+        tokenURI_2, image_path_2, thumbnail_path_2 = newcardwhatdoyouthink_2.get_tokenURI_hash()
+
+        # swapCallback transaction
+        # Calls the Card contract callback function to finalize the update of this tokenURI
+        try:
+            callback = self.contract.functions.swapCallback(
+                tokenId1,
+                tokenId2,
+                tokenURI_1[2:],
+                tokenURI_2[2:]
+                # First two characters of tokenURI are always 'Qm', and thus are taken off - found in baseURI
+            ).buildTransaction({
+                'from': self.addy,
+                'nonce': self.nonce,
+                'gasPrice': self.web3.eth.gas_price
+            })
+        except:
+            pass
+
+        self.nonce += 1
+
+        try:
+            signed_tx = self.web3.eth.account.sign_transaction(callback, self.pkey)
+            # Send transaction
+            tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            # print('signed and done: ', tx_hash.hex())
+            # Inform on public telegram bot about successful update with the image that was stored by the Card class
+            # Inform admin of updated card
+            req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
+                botToken=self.bot_token, chatID=self.channel_id,
+                text='swapCallback for tokens {} and {}'.format(tokenId1, tokenId2)
+            )
+            requests.post(req)
+        except:
+            # Transaction failed, will try again after restart
+            # TODO: have a vairable to not update block if failed tx
+            req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
+                botToken=self.bot_token, chatID=self.channel_id,
+                text='swapCallback for tokens {} and {} failed, restarting'.format(tokenId1, tokenId2)
+            )
+            requests.post(req)
+            exit()
+        finally:
+            # Removes the images from the disk
+            os.remove(image_path_1)
+            os.remove(image_path_2)
+            os.remove(thumbnail_path_1)
+            os.remove(thumbnail_path_2)
+            # Removes the card object from memory to save up $$$
+            del newcardwhatdoyouthink_1
+            del newcardwhatdoyouthink_2
 
     async def _handle_live_events(self, event_filter, poll_interval):
         while True:
             for event_data in event_filter.get_new_entries():
                 await self._handle_event(event_data['args'])
-                #print(event_data['args'])
+                # print(event_data['args'])
             await asyncio.sleep(poll_interval)
 
     async def run(self):
@@ -204,10 +305,14 @@ class ListeningOracle():
         ### PROCESSING PAST EVENTS
         # Scans the blockchain for all past events after a given blockNumber and processes them
 
-        # Defines the event it is looking for
-        event = self.contract.events.NewRequestEvent
-        abi = event._get_event_abi()
-        abi_codec = event.web3.codec
+        # Defines the events it is looking for
+        update_event = self.contract.events.UpdateRequest
+        update_abi = update_event._get_event_abi()
+        update_abi_codec = update_event.web3.codec
+
+        swap_event = self.contract.events.SwapRequest
+        swap_abi = swap_event._get_event_abi()
+        swap_abi_codec = swap_event.web3.codec
 
         start_time = time.time() + self.wait_time  # Little buffer for restarts -- time for tx to get through
         message_time = time.time()
@@ -217,21 +322,42 @@ class ListeningOracle():
             if time.time() - start_time >= self.wait_time:
                 # Holds the new last block value, adding a little buffer for safety
                 current_block = self.web3.eth.get_block_number()
-                new_last_block = current_block - 1
-                
-                # Finds new logs
-                data_filter_set, event_filter_params = construct_event_filter_params(
-                    abi,
-                    abi_codec,
-                    contract_address=event.address,
+                new_last_block = current_block + 1  # Next time, we start on the NEXT block
+
+                # Finds new logs -- UpdateRequest event
+                update_data_filter_set, update_event_filter_params = construct_event_filter_params(
+                    update_abi,
+                    update_abi_codec,
+                    contract_address=update_event.address,
                     fromBlock=self.last_block
                 )
-                logs = event.web3.eth.getLogs(event_filter_params)
+                update_logs = update_event.web3.eth.getLogs(update_event_filter_params)
 
-                # Handles each log
-                for entry in logs:
-                    event_data = get_event_data(abi_codec, abi, entry)
-                    await self._handle_event(event_data['args'])
+                # Finds new logs -- SwapRequest event
+                swap_data_filter_set, swap_event_filter_params = construct_event_filter_params(
+                    swap_abi,
+                    swap_abi_codec,
+                    contract_address=swap_event.address,
+                    fromBlock=self.last_block
+                )
+                swap_logs = swap_event.web3.eth.getLogs(swap_event_filter_params)
+
+                # Sets the last block
+                self.last_block = new_last_block
+
+                # Handles each log -- UpdateRequest event
+                for entry in update_logs:
+                    update_event_data = get_event_data(update_abi_codec, update_abi, entry)
+                    await self._handle_update_event(update_event_data['args'])
+
+                # Handles each log -- SwapRequest event
+                for entry in swap_logs:
+                    swap_event_data = get_event_data(swap_abi_codec, swap_abi, entry)
+                    await self._handle_swap_event(swap_event_data['args'])
+
+                with open(self.start_block_file, 'w') as f:
+                    f.write(str(self.last_block))
+                    f.close()
 
                 # Sets the new start time
                 start_time = time.time()
@@ -242,7 +368,7 @@ class ListeningOracle():
             else:
                 time.sleep(self.wait_time)
 
-            # Sending OK-status messages to Telegram adminz -- to follow live the state of the bot
+            # Sending OK-status messages to a private channel -- to follow live the state of the bot
             if int(time.time()) % self.message_wait_time <= 60:
                 balance = self.web3.eth.get_balance(self.addy)
                 balance = round(self.web3.fromWei(balance, 'ether'), 4)
@@ -257,14 +383,52 @@ class ListeningOracle():
                 message_time = time.time()
                 time.sleep(60)
 
+        ### PROCESSING CURRENT EVENTS LIVE - NOT USED
+        """event_filter = self.contract.events.NewRequestEvent.createFilter(fromBlock=self.start_block)
+
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(
+                asyncio.gather(
+                    self._handle_live_events(event_filter, 2)
+                )
+            )
+        finally:
+            loop.close()"""
+
+        """
+        RUNNING LOOP:
+            >let start = 0, or block at deployment, or block at reupdating, or other
+            >define threshold as timeframe to wait between two requests to not flood the service:
+                -> blocks get added every 3 seconds on BSC
+            >while True loop:
+                >measure start_time
+                >send request to see logs from_block = start
+                >process each of the requests, if any, as already implemented
+                >measure finish_time
+                >if finish_time - start_time > threshold, continue loop
+                >if finish_time - start_time < threshold, sleep for threshold - (finish_time - start_time), then continue
+                >>>continue loop means whe set the start_block at the current one
+        """
+
 
 if __name__ == '__main__':
-    processingIds = '0123456789'
+    processingIds = '0123456789'  # legacy and useless bit i havent brought myself to remove
 
     with open('doc/ENDPOINT_API.json') as f:
         data = json.load(f)
         key = data['API_KEY']
         f.close()
+
+    """
+    # Local testing
+    cardContract = {
+        "addy": '0x016d298D31cF111d22695AD2163822b38BA03E37',
+        "provider": 'http://127.0.0.1:7545',  # Testing on Ganache
+        "kind": "HTTP"
+    }
+    start_block_file = "./doc/start_block_testing.txt"
+    """
 
     # MATIC testnet
     cardContract = {
@@ -273,8 +437,7 @@ if __name__ == '__main__':
         "kind": "WS"
     }
     start_block_file = "./doc/start_block.txt"
+
     lo = ListeningOracle(processingIds, cardContract, start_block_file)
     asyncio.run(lo.run())
-
-    # For development: https://github.com/ChainSafe/web3.js/issues/2053
 

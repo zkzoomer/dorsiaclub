@@ -564,6 +564,26 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
                 })
             })
 
+            context('when giving the wrong tokens to burn', function () {
+                it('reverts', async function () {
+                    await expectRevert(
+                        this.sCard.burnSoulboundCardsOfToken('1', [altReceiver, newOwner, owner], { from: owner })
+                        ,
+                        "SCARD: token not on the set"
+                    )
+                })
+            })
+
+            context('when the given token does not exist', function () {
+                it('reverts', async function () {
+                    await expectRevert(
+                        this.sCard.burnSoulboundCardsOfToken('350', [receiver], { from: owner })
+                        ,
+                        "ERC721: owner query for nonexistent token"
+                    )
+                })
+            })
+
             context('with a successful call', function () {
                 let tx
 
@@ -677,6 +697,16 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
                     await this.sCard.sendSoulboundCard(owner, receiver, 1, { from: owner });
                     await this.sCard.sendSoulboundCard(owner, receiver, 2, { from: owner });
                     await this.sCard.burnReceivedSoulboundCards(receiver, toBurn, { from: operator });
+                })
+            })
+
+            context('when giving the wrong tokens to burn', function () {
+                it('reverts', async function () {
+                    await expectRevert(
+                        this.sCard.burnReceivedSoulboundCards(receiver, ['1', '2', '4'], { from: receiver })
+                        ,
+                        "SCARD: token not on the set"
+                    )
                 })
             })
 
@@ -834,9 +864,8 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
             context('when buying an item on the Marketplace', function () {
                 it('transfers the bCard to the buyer burning the associated sCards', async function () {
                     // Need to process the lagged update first tho, newOwner was defined as oracle
-                    await this.bCard.callback(1, "", { from: newOwner })
+                    await this.bCard.updateCallback(1, "", { from: newOwner })
                     const tx = await this.mPlace.createMarketSale(1, fourthToken[0], fourthToken[1], { from: newOwner, value: toPay })
-                    console.log(tx)
                     expect(await this.bCard.ownerOf('1')).to.be.equal(newOwner);
 
                     expect([...await this.sCard.soulboundCardReceivers('1')].sort()).to.deep.equal(
@@ -860,15 +889,8 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
                 })
             })
 
-            context('when you only have 411 tests', function () {
-                it('needs one more', function () {})
-                it('needs one more', function () {})
-                it('needs one more', function () {})
-                it('needs one more', function () {})
-                it('needs one more', function () {})
-                it('needs one more', function () {})
-                it('needs one more', function () {})
-                it('needs one more', function () {})
+            context('when you only have 418 tests', function () {
+                it('needs just two more', function () {})
                 it('perfect', function () {})
             })
             

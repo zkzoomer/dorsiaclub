@@ -103,11 +103,11 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     ISoulboundCard private sCard;
 
     // Token mint price
-    uint256 public _mintPrice = 0.1 ether;
-    // Token URI update price
-    uint256 public _updatePrice = 0.05 ether;
+    uint256 public mintPrice = 0.1 ether;
+    // Token URI update / swap price
+    uint256 public updatePrice = 0.05 ether;
     // Oracle update transaction gas price
-    uint256 public _oraclePrice = 0.015 ether;
+    uint256 public oraclePrice = 0.015 ether;
 
     // Oracle related events
     event UpdateRequest(uint256 tokenId, uint256 genes, string name, CardProperties cardProperties);
@@ -184,20 +184,21 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev Changes the update price for the usage of the oracle
      */
     function modifyUpdatePrice(uint256 newUpdatePrice) external onlyOwner {
-        require(newUpdatePrice >= _oraclePrice); // dev: Update price must always cover the gas costs of running the oracle
-        _updatePrice = newUpdatePrice;
+        require(newUpdatePrice >= oraclePrice); // dev: Update price must always cover the gas costs of running the oracle
+        updatePrice = newUpdatePrice;
     }
 
     /**
      * @dev Calls the oracle to update a certain token URI with the newly defined Card struct
      */
     function _updateTokenURI(uint256 _tokenId, uint256 _genes, string calldata _cardName, CardProperties calldata _cardProperties) internal {
+        require(BusinessCardUtils.validateOtherProperties(_cardProperties));  // Other properties are not valid
         require(_exists(_tokenId));
         // Calls for updating the token can only be made if it is not being processed already
         require(requests[_tokenId] == false, "Update being processed");
         requests[_tokenId] = true;
-        // Fund the server oracle with enough funds for the URI update transaction
-        payable(serverOracle).transfer(_oraclePrice);
+        // Fund the server oracle with enough funds for the updateCallback transaction
+        payable(serverOracle).transfer(oraclePrice);
         // Emit event to be catched by the server oracle running off-chain
         emit UpdateRequest(_tokenId, _genes, _cardName, _cardProperties);
     }
@@ -206,7 +207,24 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev Updates a certain token URI and clears the corresponding update request
      * Only the assigned server oracle is allowed to call this function
      */
-     function callback(uint256 _tokenId, string memory _tokenURI) external {
+     function updateCallback(uint256 _tokenId, string memory _tokenURI) external {
+        _callback(_tokenId, _tokenURI);
+    }
+
+    /**
+     * @dev Updates a certain token URI and clears the corresponding update request
+     * Only the assigned server oracle is allowed to call this function
+     */
+     function swapCallback(uint256 _tokenId1, uint256 _tokenId2, string memory _tokenURI1, string memory _tokenURI2) external {
+        _callback(_tokenId1, _tokenURI1);
+        _callback(_tokenId2, _tokenURI2);
+    }
+
+    /**
+     * @dev Updates a certain token URI and clears the corresponding update request
+     * Only the assigned server oracle is allowed to call this function
+     */
+     function _callback(uint256 _tokenId, string memory _tokenURI) internal {
         require(_msgSender() == serverOracle); // dev: Only the assigned oracle can call this function
         require(requests[_tokenId]); // dev: Request not in pending list
         _tokenURIs[_tokenId] = _tokenURI;
@@ -220,7 +238,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     function getCard(string calldata _cardName, CardProperties calldata _cardProperties) public payable {
         require(saleStarted == true);  // dev: sale not started or paused, can be managed on frontend
         require(totalSupply() < maxSupply);  // dev: sale has ended, can be managed on frontend
-        require(msg.value >= _mintPrice);  // dev: value sent is below the price, can be managed on frontend
+        require(msg.value >= mintPrice);  // dev: value sent is below the price, can be managed on frontend
         // Minting a new NFT with the name and position provided
         _safeMint(_msgSender(), totalSupply() + 1, _cardName, _cardProperties);
     }
@@ -293,7 +311,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
             "Position not valid"
         );
         require(
-            msg.value >= _updatePrice || _msgSender() == bCardMarketplace
+            msg.value >= updatePrice || _msgSender() == bCardMarketplace
         );  // dev: value sent is below the price, can be managed on frontend
 
         // Only change the name if specified
@@ -322,7 +340,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
             _isApprovedOrOwner(_msgSender(), tokenId2), 
             "Caller is not owner nor approved"
         );
-        require(msg.value >= _updatePrice);  // dev: value sent is below the price, can be managed on frontend
+        require(msg.value >= updatePrice);  // dev: value sent is below the price, can be managed on frontend
         // Calls for updating the token can only be made if it is not being processed already
         require(requests[tokenId1] == false && requests[tokenId2] == false, "Update being processed");
 
@@ -338,8 +356,8 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         // Emitting a single swap request to the oracle -- processed differently
         emit SwapRequest(tokenId1, tokenId2, _tokenStats[tokenId1].genes, _tokenStats[tokenId2].genes);
 
-        // Fund the server oracle with enough funds for the two URI updates
-        payable(serverOracle).transfer(2 * _oraclePrice);
+        // Fund the server oracle with enough funds for the swapCallback transaction
+        payable(serverOracle).transfer(oraclePrice);
     }
 
     /**

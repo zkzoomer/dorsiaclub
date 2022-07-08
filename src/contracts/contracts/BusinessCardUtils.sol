@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import "./BusinessCard.sol";
+
 /**
  * @dev Useful functions for validating the name and position of Business Cards
  */
@@ -63,6 +65,21 @@ library BusinessCardUtils {
             lastChar = char;
         }
         return true;
+    }
+
+    function validateOtherProperties(BusinessCard.CardProperties calldata cardProperties) internal pure returns (bool) {
+        if(
+            bytes(cardProperties.twitterAccount).length < 15 &&
+            bytes(cardProperties.telegramAccount).length < 32 &&
+            bytes(cardProperties.telegramGroup).length < 32 &&
+            ((cardProperties.discordAccount >= 10**17 && cardProperties.discordAccount < 10**18) || cardProperties.discordAccount == 0) &&
+            bytes(cardProperties.discordGroup).length < 32 &&
+            bytes(cardProperties.githubUsername).length < 39 &&
+            bytes(cardProperties.website).length < 50
+        )
+            return true;
+        
+        return false;
     }
 
     /**
