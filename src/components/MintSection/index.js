@@ -32,6 +32,20 @@ const MintElements = (props) => {
         placeholder_text_1: 'Your name',
         id_2: 'position',
         placeholder_text_2: 'Your position',
+        id_3: 'twitterAccount',
+        placeholder_text_3: 'Twitter account',
+        id_4: 'telegramAccount',
+        placeholder_text_4: 'Telegram account',
+        id_5: 'telegramGroup',
+        placeholder_text_5: 'Telegram group',
+        id_6: 'githubAccount',
+        placeholder_text_6: 'Github account',
+        id_7: 'discordAccount',
+        placeholder_text_7: 'Discord account',
+        id_8: 'discordGroup',
+        placeholder_text_8: 'Discord group',
+        id_9: 'website',
+        placeholder_text_9: 'Website',
     };
 
     return (
@@ -47,6 +61,7 @@ const MintElements = (props) => {
                                 handleLivePositionChange={handleLivePositionChange}
                                 account={props.account}
                                 chainId={props.chainId}
+                                provider={props.provider}
                                 setErrorMessage={props.setErrorMessage}
                             />
                         </Column1>

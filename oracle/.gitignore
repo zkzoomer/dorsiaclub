@@ -1,0 +1,8 @@
+# oracle production folders
+__pycache__/
+doc/
+errors/
+logos/
+save/
+.idea/
+assets/

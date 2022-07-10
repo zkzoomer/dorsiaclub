@@ -76,14 +76,17 @@ export const Column1 = styled.div`
     height: 100%;
     grid-area: col1;
     color: var(--main-text);
-    padding-top: 15%;
-    margin-bottom: 15px;
+    padding-top: 10%;
+    margin-bottom: 0px;
 
     @media screen and (max-width: 768px) {
-        height: 300px;
-        padding-top: 5%;
+        height: 100%;
+        padding-top: 0%;
         width: 100%;
     };
+`
+
+export const ScreenWrapper = styled.div`
 `
 
 export const Column2 = styled.div`
@@ -170,15 +173,21 @@ export const ImgLivePosition = styled.div`
 export const TextWrapper = styled.div`
     padding-top: 0px;
     padding-bottom: 15px;
-    margin-left: 15%;
+    margin-left: 0%;
     width: 100%;
     position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 `
 
 export const ButtonWrapper = styled.div`
     margin-top: 32px;
-    width: 50%;
-    margin-left: 25%;
+    width: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 `
 
 export const EnabledButton = styled.button`
@@ -195,7 +204,7 @@ export const EnabledButton = styled.button`
     border: none;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
-    width: 100%; 
+    width: 50%;
     filter: drop-shadow(10px 10px 5px rgba(0,0,0,0.5));
 
     &:hover {
@@ -206,6 +215,7 @@ export const EnabledButton = styled.button`
 `
 
 export const DisabledButton = styled.button`
+    width: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -217,6 +227,23 @@ export const DisabledButton = styled.button`
     font-size: 16px;
     outline: none;
     border: none;
-    width: 100%; 
 `
 
+export const ChangeInputButton = styled.button`
+    width: 10%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50px;
+    font-size: 1.5rem;
+    padding: 14px 0px;
+    margin: 0 20px 0 20px;
+    background: transparent;
+    color: var(--sub-text);
+
+    &:hover {
+        transition: all 0.3s ease-in-out;
+        color: var(--highlighted-text);
+        transform: scale(1.3);
+    }
+`

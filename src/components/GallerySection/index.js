@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef }  from 'react'
-import { contract } from '../../web3config';
+import { ethers } from "ethers"; 
+import { bCardAddress, bCardAbi, mPlaceAddress, mPlaceAbi } from '../../web3config';
 import GalleryCard from './GalleryCard';
 import SearchItems from './SearchItems';
 import { Form } from 'react-bootstrap';
@@ -29,6 +30,7 @@ const Gallery = (props) => {
 	const prevPage = usePrevious(page);  // Change in page
 	const prevSwitch = usePrevious(isSwitchOn);  // Change in switch
 	const prevSearch = usePrevious(toSearch);
+
 	function usePrevious(value) {
 		const ref = useRef();
 		useEffect(() => {
@@ -78,7 +80,7 @@ const Gallery = (props) => {
 		)
 	}
 
-	const filterCards = async (filter, _cards) => {
+	const filterCards = async (filter, _cards, bCardContract) => {
 
 		const checkCardData = async (data, filter, specialFilter) => {
 			// Is the Setting, Paper, Coloring, Font, Location from the token metadata in the provided list ?
@@ -142,7 +144,7 @@ const Gallery = (props) => {
 
 		for (const card of _cards) {
 
-			const tokenMetadataURL = await contract.tokenURI(card);
+			const tokenMetadataURL = await bCardContract.tokenURI(card);
 			const response = await fetch(tokenMetadataURL);
 			const data = await response.json();
 			
@@ -159,12 +161,15 @@ const Gallery = (props) => {
 
 
 	useEffect(() => {
+		
+		const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, props.provider);
+
 		async function fetchData() {
 			// Change in account, fully resets Gallery page to loading and showing all Business Cards
 			if (props.account !== prevAccount && isSwitchOn) {  // Only if there was a previous account
 				setSwitch(false);
 				setIsLoading(true);
-				let _totalCards = await contract.totalSupply();
+				let _totalCards = await bCardContract.totalSupply();
 				setTotalCards( Array.from({length: parseInt(_totalCards)}, (_, i) => i + 1).reverse() );
 				setLoadedCards([]);
 				setPage(1);
@@ -186,7 +191,11 @@ const Gallery = (props) => {
 				const _newLoadedCards = [];
 				for (var i = lastLoadedCard; i < lastLoadedCard + toLoad; i++) {
 					_newLoadedCards.push(
-						<GalleryCard id={totalCards[i]} key={totalCards[i]} />
+						<GalleryCard 
+							id={totalCards[i]} 
+							contract={bCardContract} 
+							key={totalCards[i]} 
+						/>
 					)
 				}
 
@@ -210,19 +219,19 @@ const Gallery = (props) => {
 
 					setIsLoading(true);
 					// Need to get the total balance first
-					let _accountBalance = await contract.balanceOf(props.account)
+					let _accountBalance = await bCardContract.balanceOf(props.account)
 					// Then iterate to get each index
 					_accountBalance = parseInt(_accountBalance)
 					var _userCards = []
 					for (let i=0; i < _accountBalance; i++) {
-						let _card = await contract.tokenOfOwnerByIndex(props.account, i);
+						let _card = await bCardContract.tokenOfOwnerByIndex(props.account, i);
 						_userCards.push(parseInt(_card))
 					}
 
 					// MANAGE SEARCH TERMS
 					// TODO: make it so that it doesnt do the same request twice, store a card - tokenMetadata key-value pair in the list, feed this to GalleryCard
 					if (toSearch) {
-						_userCards = await filterCards(toSearch, _userCards);
+						_userCards = await filterCards(toSearch, _userCards, bCardContract);
 					}
 
 					setTotalCards(_userCards.reverse());
@@ -231,13 +240,13 @@ const Gallery = (props) => {
 				} else {  // All existing cards
 
 					setIsLoading(true);
-					let _totalCards = await contract.totalSupply();
+					let _totalCards = await bCardContract.totalSupply();
 
 					// MANAGE SEARCH TERMS
 					_totalCards = Array.from({length: parseInt(_totalCards)}, (_, i) => i + 1).reverse()
 
 					if (toSearch) {
-						_totalCards = await filterCards(toSearch, _totalCards);
+						_totalCards = await filterCards(toSearch, _totalCards, bCardContract);
 					}
 
 					setTotalCards(_totalCards);
@@ -261,7 +270,7 @@ const Gallery = (props) => {
 		}
 		fetchData()
 	// eslint-disable-next-line
-  	}, [isSwitchOn, props.account, page, loadedCards, toSearch]); 
+  	}, [isSwitchOn, props.account, props.provider, page, loadedCards, toSearch]); 
 
 	
 	return (

@@ -3,9 +3,8 @@ import './ChangeNameInputBoxes.scss';
 import { ethers } from 'ethers';
 import { 
     chainId, 
-    contract, 
-    _provider,
-    contractAddress,
+    bCardAddress,
+    bCardAbi,
     maxNameLength, 
     maxPositionLength,
     updatePrice,
@@ -134,7 +133,7 @@ class ChangeNameSection extends React.Component {
         let positionError = "";
 
         // Check if account has enough funds
-        let balance = await _provider.getBalance(this.props.account);
+        let balance = await this.props.provider.getBalance(this.props.account);
         balance = ethers.utils.formatEther(balance)
         if (balance < ethers.utils.formatEther(updatePrice)) {
             this.props.setErrorMessage(['Insufficient funds', 'Make sure your wallet is funded'])
@@ -150,7 +149,8 @@ class ChangeNameSection extends React.Component {
         }
 
         /* name already taken, checks the smart contract */
-        let _nameTaken = await contract.isNameReserved(this.state.name.trim())
+        const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, this.props.provider);
+        let _nameTaken = await bCardContract.isNameReserved(this.state.name.trim())
         if (_nameTaken) {
             nameError = "Name is already taken, choose another one"
         }
@@ -178,15 +178,17 @@ class ChangeNameSection extends React.Component {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const signer = provider.getSigner();
 
-                const contractAbi = require('../../contracts/BusinessCard/build/contracts/BusinessCard.json')['abi']
-                const _contract = new ethers.Contract(contractAddress, contractAbi, provider)
+                const contractAbi = require('../../abis/BusinessCard.json')['abi']
+                const _contract = new ethers.Contract(bCardAddress, contractAbi, provider)
                 const connectedContract = await _contract.connect(signer)
+                const properties = [this.state.position.trim(), '', '', '', '0', '', '', '']
 
-                await connectedContract.changeNameAndOrPosition(this.props.id, this.state.name.trim(), this.state.position.trim(), { value: updatePrice })
+                await connectedContract.updateCard(this.props.id, this.state.name.trim(), properties, { value: updatePrice })
 
                 // Empty all fields when tx is successful
                 this.setState(initialState);
             } catch (err) {
+                console.log(err)
                 // User can try and mint again
                 this.setState({ awaitingTx: false })
             } 

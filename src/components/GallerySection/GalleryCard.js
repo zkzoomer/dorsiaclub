@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from 'react-bootstrap';
-import { contract } from '../../web3config';
 import './card.css';
 
 const GalleryCard = (props) => {
@@ -16,7 +15,7 @@ const GalleryCard = (props) => {
     useEffect(() => {
         async function fetchData() {
             let tokenMetadataURL = null;
-            tokenMetadataURL = await contract.tokenURI(props.id);
+            tokenMetadataURL = await props.contract.tokenURI(props.id);
             const response = await fetch(tokenMetadataURL);
             const data = await response.json();
             setTokenMetadata(data);

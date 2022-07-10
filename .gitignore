@@ -12,6 +12,8 @@
 /build
 
 # misc
+.*/
+venv
 .env
 .DS_Store
 .env.local
@@ -30,12 +32,12 @@ yarn-error.log*
 /dump
 
 # oracle production folders
-/src/oracle/__pycache__
-/src/oracle/doc
-/src/oracle/errors
-/src/oracle/logos
-/src/oracle/save
-/src/oracle/.idea
+/oracle/__pycache__
+/oracle/doc
+/oracle/errors
+/oracle/logos
+/oracle/save
+/oracle/.idea
 
 # TG bot session
 /src/oracle/Dorsia_TGBot.session

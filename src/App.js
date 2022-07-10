@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ethers } from "ethers"; 
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/home';
@@ -16,6 +17,9 @@ function App() {
   const [isOpen, setIsOpen] = useState(false);
   const [account, setAccount] = useState("");
   const [chainId, setChainId] = useState(0);
+  const [provider, setProvider] = useState(
+    new ethers.providers.JsonRpcProvider("https://rpc-mumbai.maticvigil.com")
+  );
   // Array having main message, and submessage -- prompts error to user if set to anything
   const [errorMessage, setErrorMessage] = useState([]); 
 
@@ -23,8 +27,21 @@ function App() {
       setIsOpen(!isOpen)
   }
 
-  const numberTokens = 1000;
+  const numberTokens = 1111;
   const tokenList = Array.from({length: numberTokens}, (_, index) => index + 1);
+
+  /* useEffect(() => {
+    async function fetchProvider() {
+      const url = `.netlify/functions/provider_rpc`
+      try {
+        const RPC = await fetch(url).then((res) => res.json());
+        setProvider(new ethers.providers.JsonRpcProvider(RPC))
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    fetchProvider();
+  }, []) */
 
   // Will then feed the account and chainId to pages that need it: mint, gallery, token
   return (
@@ -49,8 +66,8 @@ function App() {
       />
       <Routes>
         <Route path="/" element={<Home />} exact="true"/>
-        <Route path="/gallery" element={<GalleryPage account={account} chainId={chainId} setErrorMessage={setErrorMessage}/>} exact="true"/>
-        <Route path="/mint" element={<MintPage account={account} chainId={chainId} setErrorMessage={setErrorMessage}/>} exact="true"/> 
+        <Route path="/gallery" element={<GalleryPage account={account} chainId={chainId} provider={provider} setErrorMessage={setErrorMessage}/>} exact="true"/>
+        <Route path="/mint" element={<MintPage account={account} chainId={chainId} provider={provider} setErrorMessage={setErrorMessage}/>} exact="true"/> 
         <Route path="/office" element={<OfficePage />} exact="true"/>
         {
           // Total of a thousand tokens
@@ -59,7 +76,7 @@ function App() {
             <Route 
               key = {i}
               path = {"/card/" + i} 
-              element = {<TokenPage key={i} id={i} account={account} chainId={chainId} setErrorMessage={setErrorMessage}/>} 
+              element = {<TokenPage key={i} id={i} account={account} chainId={chainId} provider={provider} setErrorMessage={setErrorMessage}/>} 
               account = {account}
               chainId = {chainId}
               exactly 

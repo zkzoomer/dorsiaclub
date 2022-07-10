@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { 
     chainId, 
-    _provider,
-    contract, 
-    contractAddress,
+    bCardContract, 
+    bCardAddress,
+    bCardAbi,
     updatePrice,
 } from '../../web3config'
 import { Spinner } from 'react-bootstrap';
@@ -29,6 +29,9 @@ const SwapNameSection = (props) => {
     const [ownedCards, setOwnedCards] = useState([]);
     const [awaitingTx, setAwaitingTx] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Smart contracts being used inside the token page
+	const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, props.provider);
 
     const handleSelect = (item) => {
         setValue(item)
@@ -58,7 +61,7 @@ const SwapNameSection = (props) => {
 
         try {
             // Check if account has enough funds
-            let balance = await _provider.getBalance(props.account);
+            let balance = await props.provider.getBalance(props.account);
             balance = ethers.utils.formatEther(balance)
             if (balance < ethers.utils.formatEther(updatePrice)) {
                 props.setErrorMessage(['Insufficient funds', 'Make sure your wallet is funded'])
@@ -70,11 +73,11 @@ const SwapNameSection = (props) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
 
-            const contractAbi = require('../../contracts/BusinessCard/build/contracts/BusinessCard.json')['abi']
-            const _contract = new ethers.Contract(contractAddress, contractAbi, provider)
+            const contractAbi = require('../../abis/BusinessCard.json')['abi']
+            const _contract = new ethers.Contract(bCardAddress, contractAbi, provider)
             const connectedContract = await _contract.connect(signer)
 
-            await connectedContract.swapNameAndPosition(props.id, cardId, { value: updatePrice })
+            await connectedContract.swapCards(props.id, cardId, { value: updatePrice })
 
             // Empty all fields when tx is successful
             setButtonEnabled(false);
@@ -111,17 +114,16 @@ const SwapNameSection = (props) => {
                 try {
                     setIsLoading(true);
                     // Need to get the total balance first
-                    let _accountBalance = await contract.balanceOf(props.account)
+                    let _accountBalance = await bCardContract.balanceOf(props.account)
                     // Then iterate to get each index
                     _accountBalance = parseInt(_accountBalance)
                     const _userCards = []
                     for (let i=0; i < _accountBalance; i++) {
-                        let _cardId = await contract.tokenOfOwnerByIndex(props.account, i);
+                        let _cardId = await bCardContract.tokenOfOwnerByIndex(props.account, i);
                         if (parseInt(_cardId) === props.id) { continue }; // Skip the token on this page
-                        let _cardStats = await contract.tokenStats(_cardId);
+                        let _cardStats = await bCardContract.tokenStats(_cardId);
                         let _cardName = _cardStats['name']
-                        let _cardPosition = _cardStats['position']
-                        _userCards.push(stylizedTokenNumber(parseInt(_cardId)) + ': ' + _cardName + ', ' + _cardPosition)
+                        _userCards.push(stylizedTokenNumber(parseInt(_cardId)) + ': ' + _cardName)
                     }
                     setOwnedCards(_userCards.reverse())
                     setIsLoading(false);

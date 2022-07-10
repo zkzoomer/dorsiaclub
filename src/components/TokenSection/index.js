@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { contract, defaultURI } from '../../web3config';
+import { ethers } from "ethers"; 
+import { 
+    defaultURI,
+    bCardAddress,
+    bCardAbi,
+} from '../../web3config';
 import AttributesSection from './Attributes';
 import ChangeNameSection from './ChangeName';
 import SwapNameSection from './SwapNames';
@@ -28,6 +33,11 @@ const TokenPageElements = (props) => {
     const [descriptionText, setDescriptionText] = useState("");
     const [loadingText, setLoadingText] = useState("");
 
+    // Smart contracts being used inside the token page
+	const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, props.provider);
+    const mPlaceContract = null;
+    const sCardContract = null;
+
     const prevAccount = usePrevious(props.account);
     function usePrevious(value) {
 		const ref = useRef();
@@ -50,7 +60,7 @@ const TokenPageElements = (props) => {
                 
                 let tokenMetadataURL = null;
                 try {
-                    tokenMetadataURL = await contract.tokenURI(props.id);
+                    tokenMetadataURL = await bCardContract.tokenURI(props.id);
                     const response = await fetch(tokenMetadataURL);
                     const data = await response.json();
 
@@ -78,7 +88,7 @@ const TokenPageElements = (props) => {
             // Check if connected account is owner of this Business Card
             try {
                 let owner = null;
-                owner = await contract.ownerOf(props.id);
+                owner = await bCardContract.ownerOf(props.id);
                 if (props.account === owner.toLowerCase()) {
                     setDescriptionText("You are the owner of this Business Card")
                     setOwnsToken(true)
@@ -146,10 +156,10 @@ const TokenPageElements = (props) => {
         section = <AttributesSection metadata={tokenMetadata}/>
     } 
     if (currentSection === 'Modify') {
-        section = <ChangeNameSection id={props.id} account={props.account} chainId={props.chainId} setErrorMessage={props.setErrorMessage}/>;
+        section = <ChangeNameSection id={props.id} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>;
     } 
     if (currentSection === 'Swap') {
-        section = <SwapNameSection id={props.id} account={props.account} chainId={props.chainId} setErrorMessage={props.setErrorMessage}/>;
+        section = <SwapNameSection id={props.id} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>;
     }
 
     const Description = () => {

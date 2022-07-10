@@ -30,6 +30,7 @@ const AttributesSection = (props) => {
 
     useEffect(() => {
         if(props.metadata) {
+            console.log(props.metadata)
             setName(props.metadata.card_name)
             setPosition(props.metadata.card_position)
 
