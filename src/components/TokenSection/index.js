@@ -35,8 +35,8 @@ const TokenPageElements = (props) => {
 
     // Smart contracts being used inside the token page
 	const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, props.provider);
-    const mPlaceContract = null;
-    const sCardContract = null;
+    /* const mPlaceContract = null;
+    const sCardContract = null; */
 
     const prevAccount = usePrevious(props.account);
     function usePrevious(value) {

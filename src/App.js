@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ethers } from "ethers"; 
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -17,9 +17,10 @@ function App() {
   const [isOpen, setIsOpen] = useState(false);
   const [account, setAccount] = useState("");
   const [chainId, setChainId] = useState(0);
-  const [provider, setProvider] = useState(
+  /* const [provider, setProvider] = useState(
     new ethers.providers.JsonRpcProvider("https://rpc-mumbai.maticvigil.com")
-  );
+  ); */
+  provider = new ethers.providers.JsonRpcProvider("https://rpc-mumbai.maticvigil.com")
   // Array having main message, and submessage -- prompts error to user if set to anything
   const [errorMessage, setErrorMessage] = useState([]); 
 

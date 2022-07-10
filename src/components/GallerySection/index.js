@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef }  from 'react'
 import { ethers } from "ethers"; 
-import { bCardAddress, bCardAbi, mPlaceAddress, mPlaceAbi } from '../../web3config';
+import { bCardAddress, bCardAbi, /* mPlaceAddress, mPlaceAbi  */} from '../../web3config';
 import GalleryCard from './GalleryCard';
 import SearchItems from './SearchItems';
 import { Form } from 'react-bootstrap';
