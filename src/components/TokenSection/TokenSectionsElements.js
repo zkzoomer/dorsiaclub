@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import {DropdownButton} from 'react-bootstrap';
+import { DropdownButton } from 'react-bootstrap';
 
 export const PageContainer = styled.div`
     background-color: var(--light-background);
@@ -11,17 +11,16 @@ export const TokenContainer = styled.div`
     background: var(--light-background);
 
     @media screen and (max-width: 768px) {
-        height: auto;
-        padding: 0px 0 0px;
-        width:100%;
-        overflow-x:hidden;
-        overflow-y:hidden;
+        overflow-x: hidden;
+        overflow-y: hidden;
+        height: 120vh;
     }
 `
 
 export const TokenH1 = styled.h1`
     padding-top: 125px;
     font-size: 2.5rem;
+    
     color: var(--highlighted-text);
     margin-bottom: 40px;
     align-items: center;
@@ -39,7 +38,6 @@ export const TokenH1 = styled.h1`
         font-size: 32px;
     }
 `
-
 
 export const OptionsMenuWrapper = styled.div`
     display: grid;
@@ -76,6 +74,7 @@ export const InfoWrapper = styled.div`
     padding-right: 30px;
     margin-left: auto;
     margin-right: auto;
+    
 
     @media screen and (max-width: 768px) {
         /* margin-left: 30px;
@@ -97,16 +96,21 @@ export const InfoRow = styled.div`
 export const Column1 = styled.div`
     height: 100%;
     grid-area: col1;
-    color: white;
+    color: var(--main-text);
     position: relative;
     justify-content: center;
-    padding-top: 20px;
-    margin-bottom: 15px;
+    padding-top: 10%;
+    margin-bottom: 0px;
 
     @media screen and (max-width: 768px) {
-        padding-bottom: 20px;
-        padding-top: 20px;
+        height: 100%;
+        /* padding-top: 20px; */
+        padding-bottom: 10%;
+        width: 100%;
     };
+`
+
+export const ScreenWrapper = styled.div`
 `
 
 export const Column2 = styled.div`
@@ -122,7 +126,6 @@ export const ImgWrap = styled.div`
 export const ImgDescription = styled.div`   
     color: white;
     font-size: 1.1rem;
-    margin-top: 5px;
     height: 100%;
     line-height: 1.4;
     align-items: center;
@@ -134,8 +137,6 @@ export const ImgDescription = styled.div`
 export const Img = styled.img`
     width: 100%;
     height: 100%;
-    margin: 0 0 10px 0;
-    padding-right: 0;
     filter: drop-shadow(10px 10px 5px rgba(0,0,0,0.5));
 `
 
@@ -173,13 +174,79 @@ export const OptionsButton = styled.button.attrs({
 `
 
 export const AttributeWrapper = styled.div`
+    margin-top: -10%;
+    padding-top: 15px;
     top: 0;
     font-size: 1.25rem;
     height: 100%;
 
     @media screen and (max-width: 768px) {
         font-size: 1rem;
+        padding-top: 15px;
     };
+`
+
+export const DropLink = styled.li`
+    background-color: var(--dark-background);
+    color: var(--main-text);
+    display: none;
+    position: absolute;
+    min-width: 160px;
+    box-shadow: 0px 4px 8px 0px black;
+    border-radius: 10px;
+    padding: 12px 16px;
+    z-index: 1;
+    
+`
+
+export const DropLinkContents = styled.div`
+    font-size: 1.25rem;
+    background: var(--dark-background);
+    color: var(--main-text);
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+    &:hover {
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        color: var(--highlighted-text);
+    }
+`
+
+export const AttributeLinks = styled.div`
+    position: relative;
+    display: flex;
+    flex-direction: row;
+
+    bottom: 0;
+    color: var(--main-text);
+    padding-top: 25px;
+    font-size: 2rem;
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+`
+
+export const LinkWrapper = styled.div`
+    padding-right: 25px;
+
+    &:hover ${DropLink} {
+        display: block;
+        transition: all 0.3s ease-in-out;
+        color: var(--highlighted-text);
+        transform: scale(1.05);
+    }
+`
+
+export const LinkButton = styled.div`
+    padding-right: 25px;
+
+    &:hover {
+        transition: all 0.3s ease-in-out;
+        color: var(--highlighted-text);
+        cursor: pointer;
+        transform: scale(1.05);
+    }
 `
 
 export const AttributeItem = styled.div`
@@ -216,29 +283,27 @@ export const DividerLine = styled.hr`
 export const TextWrapper = styled.div`
     padding-top: 0px;
     padding-bottom: 15px;
-    margin-left: 5%;
+    margin-left: 0%;
     width: 100%;
     position: relative;
-
-    @media screen and (max-width: 768px) {
-        margin-left: 15%;
-    };
+    display: flex;
+    justify-content: center;
+    align-items: center;
 `
 
 export const ButtonWrapper = styled.div`
     margin-top: 32px;
-    width: 70%;
-    margin-left: 5%;
-
-    @media screen and (max-width: 768px) {
-        margin-left: 15%;
-    };
+    width: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 `
 
 export const EnabledButton = styled.button`
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center;    
     border-radius: 50px;
     background: var(--button);
     white-space: nowrap;
@@ -249,7 +314,7 @@ export const EnabledButton = styled.button`
     border: none;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
-    width: 100%; 
+    width: 50%;
     filter: drop-shadow(10px 10px 5px rgba(0,0,0,0.5));
 
     &:hover {
@@ -260,6 +325,7 @@ export const EnabledButton = styled.button`
 `
 
 export const DisabledButton = styled.button`
+width: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -271,7 +337,25 @@ export const DisabledButton = styled.button`
     font-size: 16px;
     outline: none;
     border: none;
-    width: 100%; 
+`
+
+export const ChangeInputButton = styled.button`
+    width: 10%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50px;
+    font-size: 1.5rem;
+    padding: 14px 0px;
+    margin: 0 20px 0 20px;
+    background: transparent;
+    color: var(--sub-text);
+
+    &:hover {
+        transition: all 0.3s ease-in-out;
+        color: var(--highlighted-text);
+        transform: scale(1.3);
+    }
 `
 
 export const SwapDropdownWrapper = styled.div`

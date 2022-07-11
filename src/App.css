@@ -5,6 +5,44 @@
   font-family: 'Bookman-Type', serif;
 }
 
+/* :root {
+  --main-text: #fff;
+  --highlighted-text: #fff;
+  --sub-text: #fff;
+  --dark-background: #141414;
+  --light-background: #373737;
+  --light-background-2: #4E484E;
+  --light-background-3: #817781;
+  --transition-background: #1A181A;
+  --divider: #C0BBC0;
+  --button: #CCD12E;
+  --button-alt: #CFD43D;
+  --disabled-button: #BBC03F;
+  --button-text: #0A0A0A;
+  --error: #f2564f;
+
+  --test: #0A0A0A;
+} */
+
+/* :root {
+  --main-text: #eee3c1;
+  --highlighted-text: #F6EFDD;
+  --sub-text: #eee3c1;
+  --dark-background: #0A0A0A;
+  --light-background: #1A181A;
+  --light-background-2: #4E484E;
+  --light-background-3: #817781;
+  --transition-background: #1A181A;
+  --divider: #C0BBC0;
+  --button: #CCD12E;
+  --button-alt: #CFD43D;
+  --disabled-button: #BBC03F;
+  --button-text: #0A0A0A;
+  --error: #D1342F;
+
+  --test: #0A0A0A;
+} */
+
 :root {
   --main-text: #E9ECEF;
   --highlighted-text: #F8F9FA;

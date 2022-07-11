@@ -10,22 +10,68 @@ import {
     updatePrice,
 } from '../../web3config'
 import { 
+    ScreenWrapper,
     EnabledButton,
     DisabledButton, 
+    ChangeInputButton,
     ButtonWrapper, 
-    TextWrapper,
+    TextWrapper
 } from './TokenSectionsElements';
 import { Spinner } from 'react-bootstrap';
+import { 
+    FaAngleLeft,
+    FaAngleRight
+} from 'react-icons/fa'
 
 const initialState = {
     name: "",
     position: "",
     nameError: "",
     positionError: "",
+    cardProperties: {
+        twitterAccount: "",
+        telegramAccount: "",
+        telegramGroup: "",
+        discordAccount: "",
+        discordGroup: "",
+        githubAccount: "",
+        website: ""
+    },
+    cardPropertiesError: {
+        twitterAccount: null,
+        telegramAccount: null,
+        telegramGroup: null,
+        discordAccount: null,
+        discordGroup: null,
+        githubAccount: null,
+        website: null
+    },
     liveName: "",
     livePosition: "",
+    screen: 1,
     awaitingTx: false,
 }
+
+const inputs = {
+    id_1: 'name',
+    placeholder_text_1: 'Your name',
+    id_2: 'position',
+    placeholder_text_2: 'Your position',
+    id_3: 'twitterAccount',
+    placeholder_text_3: 'Twitter account',
+    id_4: 'telegramAccount',
+    placeholder_text_4: 'Telegram account',
+    id_5: 'telegramGroup',
+    placeholder_text_5: 'Telegram group',
+    id_6: 'githubAccount',
+    placeholder_text_6: 'Github account',
+    id_7: 'discordAccount',
+    placeholder_text_7: 'Discord account',
+    id_8: 'discordGroup',
+    placeholder_text_8: 'Discord group',
+    id_9: 'website',
+    placeholder_text_9: 'Website',
+};
 
 class ChangeNameSection extends React.Component {
 
@@ -53,8 +99,80 @@ class ChangeNameSection extends React.Component {
                 // Reflect the validated change on input boxes
                 this.setState({[event.target.name]: event.target.value});
             }
-        }
+        } else {
+            let validUpdate = true;
+            let errorMessage = null;
+            let cardPropertiesError = this.state.cardPropertiesError
 
+            if (event.target.name === 'twitterAccount') {
+                const format = /^[a-zA-Z0-9_]*$/;
+                if(event.target.value.length < 3) {
+                    errorMessage = 'Must be more than 3 characters'
+                } else if (event.target.value.length > 15) {
+                    errorMessage = 'Must be less than 15 characters'
+                    validUpdate = false;
+                } 
+                if (!format.test(event.target.value)) {
+                    errorMessage = 'Must be a valid username'
+                    validUpdate = false;
+                } 
+            }
+
+            if (event.target.name === 'telegramAccount' || event.target.name === 'telegramGroup' || event.target.name === 'discordGroup') {
+                const format = /^[a-zA-Z0-9_]*$/;
+                if(event.target.value.length < 5) {
+                    errorMessage = 'Must be more than 5 characters'
+                } else if (event.target.value.length > 32) {
+                    errorMessage = 'Must be less than 32 characters'
+                    validUpdate = false;
+                } 
+                if (!format.test(event.target.value)) {
+                    errorMessage = 'Must be a valid username'
+                    validUpdate = false;
+                } 
+            }
+
+            if (event.target.name === 'discordAccount') {
+                const format = /^[0-9]{18}$/;
+                if (!format.test(event.target.value)) {
+                    errorMessage = 'Discord ID is 18 digits long'
+                    validUpdate = true;
+                }
+            }
+
+            if (event.target.name === 'githubAccount') {
+                const format = /^[a-zA-Z0-9\d](?:[a-zA-Z0-9\d]|-(?=[a-zA-Z0-9\d]))*$/;
+                if(event.target.value.length < 4) {
+                    errorMessage = 'Must be more than 4 characters'
+                } else if (event.target.value.length > 39) {
+                    errorMessage = 'Must be less than 39 characters'
+                    validUpdate = false;
+                } 
+                if (!format.test(event.target.value)) {
+                    errorMessage = 'Must be a valid username'
+                } 
+            }
+
+            if (event.target.name === 'website') {
+                const format = /(([\w]+:)?\/\/)?(([\d\w]|%[a-fA-f\d]{2,2})+(:([\d\w]|%[a-fA-f\d]{2,2})+)?@)?([\d\w][-\d\w]{0,253}[\d\w]\.)+[\w]{2,63}(:[\d]+)?(\/([-+_~.\d\w]|%[a-fA-f\d]{2,2})*)*(\?(&?([-+_~.\d\w]|%[a-fA-f\d]{2,2})=?)*)?(#([-+_~.\d\w]|%[a-fA-f\d]{2,2})*)?/;
+                if (event.target.value.length > 75) {
+                    errorMessage = 'Too many characters'
+                    validUpdate = false;
+                } else if (!format.test(event.target.value)) {
+                    errorMessage = 'Not a valid website'
+                } 
+            }
+
+            // Card properties
+            if (validUpdate) {
+                let cardProperties = this.state.cardProperties
+                cardProperties[event.target.name] = event.target.value
+                this.setState({ cardProperties })
+            }
+            // Error handling
+            cardPropertiesError[event.target.name] = errorMessage
+            this.setState({ cardPropertiesError })
+        }
     };
 
     isAlphaNumeric = (str) => {
@@ -171,7 +289,21 @@ class ChangeNameSection extends React.Component {
 
         const isValid = await this.validate();
 
+        const cardProperties = this.state.cardProperties;
+
+        const _properties = [
+            cardProperties['twitterAccount'], 
+            cardProperties['telegramAccount'], 
+            cardProperties['telegramGroup'], 
+            (cardProperties['discordAccount'] === "") ? '0' : cardProperties['discordAccount'],
+            cardProperties['discordGroup'],
+            cardProperties['githubAccount'],
+            cardProperties['website'].trim(),
+        ]
+
         if (isValid) {
+
+
 
             try {
                 // Gontract for buying
@@ -181,7 +313,7 @@ class ChangeNameSection extends React.Component {
                 const contractAbi = require('../../abis/BusinessCard.json')['abi']
                 const _contract = new ethers.Contract(bCardAddress, contractAbi, provider)
                 const connectedContract = await _contract.connect(signer)
-                const properties = [this.state.position.trim(), '', '', '', '0', '', '', '']
+                const properties = [this.state.position.trim()].concat(_properties)
 
                 await connectedContract.updateCard(this.props.id, this.state.name.trim(), properties, { value: updatePrice })
 
@@ -204,70 +336,231 @@ class ChangeNameSection extends React.Component {
         if(
             this.props.account &&
             this.props.chainId === chainId &&
-            (this.state.name !== "" ||  // Either name or position must be provided
-            this.state.position !== "")
+            (this.state.name !== "" ||  // Either name, position or one property must be provided
+            this.state.position !== "" ||
+            !Object.values(this.state.cardProperties).every(function(v) { return v === ""; })) &&
+            Object.values(this.state.cardPropertiesError).every(function(v) { return v === null; })  // no errors 
         ) {
             buttonEnabled = true
         } else {
             buttonEnabled = false;
         }   
 
+        // Showing clickable button or not
         let buttonComponent = null;
         if (buttonEnabled) {
             buttonComponent = 
+            <>
                 <EnabledButton type="button" disabled={false} onClick={this.handleClick}>
-                    {(this.state.awaitingTx) ? <Spinner animation="border" size="sm" /> : "Update Business Card"}
+                    {(this.state.awaitingTx) ? <Spinner animation="border" size="sm" /> : "Update Card"}
                 </EnabledButton>
+            </>
         } else {
             buttonComponent = 
+            <>
                 <DisabledButton type="button" disabled={true}>
-                    Update Business Card
+                    Update Card
                 </DisabledButton>
+            </>
+        }
+
+        let screenComponent = null;
+        if (this.state.screen===1) {
+            screenComponent = 
+            <>
+                <TextWrapper key='box1'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_1} 
+                            name={inputs.id_1} 
+                            id={inputs.id_1} 
+                            required 
+                            value={this.state.name}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_1} className="form__label">{inputs.placeholder_text_1}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.nameError}
+                        </div>
+                    </div>
+                </TextWrapper>
+                <TextWrapper key='box2'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_2} 
+                            name={inputs.id_2} 
+                            id={inputs.id_2} 
+                            required 
+                            value={this.state.position}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_2} className="form__label">{inputs.placeholder_text_2}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.positionError}
+                        </div>
+                    </div>
+                </TextWrapper>
+                <TextWrapper key='box3'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_3} 
+                            name={inputs.id_3} 
+                            id={inputs.id_3}  
+                            value={this.state.cardProperties['twitterAccount']}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_3} className="form__label">{inputs.placeholder_text_3}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.cardPropertiesError['twitterAccount']}
+                        </div>
+                    </div>
+                </TextWrapper>
+            </>
+        } else if (this.state.screen===2) {
+            screenComponent = 
+            <>
+                <TextWrapper key='box4'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_4} 
+                            name={inputs.id_4} 
+                            id={inputs.id_4} 
+                            required 
+                            value={this.state.cardProperties['telegramAccount']}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_4} className="form__label">{inputs.placeholder_text_4}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.cardPropertiesError['telegramAccount']}
+                        </div>
+                    </div>
+                </TextWrapper>
+                <TextWrapper key='box5'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_5} 
+                            name={inputs.id_5} 
+                            id={inputs.id_5} 
+                            required 
+                            value={this.state.cardProperties['telegramGroup']}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_5} className="form__label">{inputs.placeholder_text_5}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.cardPropertiesError['telegramGroup']}
+                        </div>
+                    </div>
+                </TextWrapper>
+                <TextWrapper key='box6'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_6} 
+                            name={inputs.id_6} 
+                            id={inputs.id_6} 
+                            value={this.state.cardProperties['githubAccount']}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_6} className="form__label">{inputs.placeholder_text_6}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.cardPropertiesError['githubAccount']}
+                        </div>
+                    </div>
+                </TextWrapper>
+            </>
+        } else if (this.state.screen===3) {
+            screenComponent = 
+            <>
+            <TextWrapper key='box7'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_7} 
+                            name={inputs.id_7} 
+                            id={inputs.id_7} 
+                            required 
+                            value={this.state.cardProperties['discordAccount']}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_7} className="form__label">{inputs.placeholder_text_7}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.cardPropertiesError['discordAccount']}
+                        </div>
+                    </div>
+                </TextWrapper>
+                <TextWrapper key='box8'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_8} 
+                            name={inputs.id_8} 
+                            id={inputs.id_8} 
+                            required 
+                            value={this.state.cardProperties['discordGroup']}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_8} className="form__label">{inputs.placeholder_text_8}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.cardPropertiesError['discordGroup']}
+                        </div>
+                    </div>
+                </TextWrapper>
+                <TextWrapper key='box9'>
+                    <div className="form__group field">
+                        <input 
+                            type="input" 
+                            className="form__field" 
+                            placeholder={inputs.placeholder_text_9} 
+                            name={inputs.id_9} 
+                            id={inputs.id_9} 
+                            required 
+                            value={this.state.cardProperties['website']}
+                            onChange={this.handleChange}
+                        />
+                        <label htmlFor={inputs.id_9} className="form__label">{inputs.placeholder_text_9}</label>
+                        <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
+                            {this.state.cardPropertiesError['website']}
+                        </div>
+                    </div>
+                </TextWrapper>
+            </>
         }
 
         return (
             <div>
                 <form onSubmit={this.handleSubmit}>
-                    
-                    <TextWrapper>
-                        <div className="form__group field">
-                            <input 
-                                type="input" 
-                                className="form__field" 
-                                placeholder="New name"
-                                name="name"
-                                id="name"
-                                value={this.state.name}
-                                onChange={this.handleChange}
-                            />
-                            <label htmlFor="name" className="form__label">New name</label>
-                            <div style={{ fontSize:12, color: "red", position: 'absolute'}}>
-                                {this.state.nameError}
-                            </div>
-                        </div>
-                    </TextWrapper>
-                    <TextWrapper>
-                        <div className="form__group field">
-                            <input 
-                                type="input" 
-                                className="form__field" 
-                                placeholder="New position"
-                                name="position"
-                                id="position"
-                                value={this.state.position}
-                                onChange={this.handleChange}
-                            />
-                            <label htmlFor="position" className="form__label">New position</label>
-                            <div style={{ fontSize:12, color: "red", position: 'absolute'}}>
-                                {this.state.positionError}
-                            </div>
-                        </div>
-                    </TextWrapper>
+                    <ScreenWrapper>
+                        {screenComponent}
+                    </ScreenWrapper>
                     <ButtonWrapper>
+                        <ChangeInputButton 
+                            type="button" 
+                            disabled={this.state.screen > 1 ? false : true} 
+                            onClick={() => {this.setState({screen: this.state.screen - 1})}}
+                        >
+                            {(this.state.screen > 1) ? <FaAngleLeft /> : <div />}
+                        </ChangeInputButton>
                         {buttonComponent}
-                        {/* <Button type="submit">
-                            Update Business Card
-                        </Button> */}
+                        <ChangeInputButton 
+                            type="button" 
+                            disabled={this.state.screen < 3 ? false : true}
+                            onClick={() => {this.setState({screen: this.state.screen + 1})}}
+                        >
+                            {(this.state.screen < 3) ? <FaAngleRight /> : <div />}
+                        </ChangeInputButton>
                     </ButtonWrapper>
                 </form>
             </div>

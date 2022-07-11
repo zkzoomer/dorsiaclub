@@ -11,9 +11,7 @@ export const MintContainer = styled.div`
 
     @media screen and (max-width: 768px) {
         overflow-x: hidden;
-
         height: 120vh;
-        padding: 0px 0 0px;
     }
 `
 
@@ -82,6 +80,7 @@ export const Column1 = styled.div`
     @media screen and (max-width: 768px) {
         height: 100%;
         padding-top: 0%;
+        padding-bottom: 10%;
         width: 100%;
     };
 `

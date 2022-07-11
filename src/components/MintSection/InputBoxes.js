@@ -293,19 +293,6 @@ class InputBoxes extends React.Component {
 
         if (isValid) {
 
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-                const signer = provider.getSigner();
-
-                const contractAbi = require('../../abis/BusinessCard.json')['abi']
-                const _contract = new ethers.Contract(bCardAddress, contractAbi, provider)
-                const connectedContract = await _contract.connect(signer)
-                const properties = [this.state.position.trim()].concat(_properties)
-
-                await connectedContract.getCard(this.state.name.trim(), properties, { value: mintPrice })
-
-                // Empty all fields when tx is successful
-                this.setState(initialState);
-
             try {
                 // Gontract for buying
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -314,7 +301,7 @@ class InputBoxes extends React.Component {
                 const contractAbi = require('../../abis/BusinessCard.json')['abi']
                 const _contract = new ethers.Contract(bCardAddress, contractAbi, provider)
                 const connectedContract = await _contract.connect(signer)
-                const properties = [this.state.position.trim()].concat(cardProperties)
+                const properties = [this.state.position.trim()].concat(_properties)
 
                 await connectedContract.getCard(this.state.name.trim(), properties, { value: mintPrice })
 
@@ -356,11 +343,11 @@ class InputBoxes extends React.Component {
             </>
         } else {
             buttonComponent = 
-                <>
-                    <DisabledButton type="button" disabled={true}>
-                        Mint
-                    </DisabledButton>
-                </>
+            <>
+                <DisabledButton type="button" disabled={true}>
+                    Mint
+                </DisabledButton>
+            </>
         }
 
         let screenComponent = null;
@@ -563,7 +550,6 @@ class InputBoxes extends React.Component {
                             {(this.state.screen < 3) ? <FaAngleRight /> : <div />}
                         </ChangeInputButton>
                     </ButtonWrapper>
-                    
                 </form>
             </div>
         );

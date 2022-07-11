@@ -162,6 +162,8 @@ const TokenPageElements = (props) => {
         section = <SwapNameSection id={props.id} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>;
     }
 
+    console.log("SECTION: ", section)
+
     const Description = () => {
         if (descriptionText) {
             return(

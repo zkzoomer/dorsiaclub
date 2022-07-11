@@ -19,7 +19,7 @@ web3 = Web3(Web3.HTTPProvider(RPC))
 
 class ListeningOracle():
 
-    def __init__(self, processing_ids, card_contract, start_block_file):
+    def __init__(self, processing_ids, card_contract, start_block_file, provider):
         """
         Initializes the ListeningOracle
 
@@ -103,7 +103,22 @@ class ListeningOracle():
         bip44_hdwallet.clean_derivation()"""
 
         # Starting nonce, program will add to it sequentially
-        self.nonce = self.web3.eth.get_transaction_count(self.addy)
+        # If this request doesn't work, it means the node is down, we will change it on next execution
+        try:
+            self.nonce = self.web3.eth.get_transaction_count(self.addy)
+        except:
+            todump = { "provider": "getblock" if provider == "moralis" else "moralis" }
+            print(todump)
+            with open('./doc/node.json', 'w') as f:
+                json.dump(todump, f)
+                f.close()
+            # Inform of provider change
+            req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
+                botToken=self.bot_token, chatID=self.channel_id,
+                text='> PROVIDER CHANGED TO {}'.format(todump["provider"].upper())
+            )
+            requests.post(req)
+            exit()
 
         """# Saving addy in a file to then get it whitelisted in the Card smart contract -- this gets done every execution
         with open('./doc/addy.txt', 'w') as f:
@@ -417,9 +432,9 @@ class ListeningOracle():
 if __name__ == '__main__':
     processingIds = '0123456789'  # legacy and useless bit i havent brought myself to remove
 
-    with open('doc/ENDPOINT_API.json') as f:
+    with open('doc/node.json') as f:
         data = json.load(f)
-        key = data['API_KEY']
+        provider = data['provider']
         f.close()
 
     """
@@ -431,15 +446,28 @@ if __name__ == '__main__':
     }
     start_block_file = "./doc/start_block_testing.txt"
     """
+    if provider == "getblock":
+        with open('doc/ENDPOINT_API.json') as f:
+            data = json.load(f)
+            key = data['GETBLOCK_API_KEY']
+            f.close()
+        rpc = "wss://matic.getblock.io/testnet/?api_key={}".format(key)
+    elif provider == "moralis":
+        with open('doc/ENDPOINT_API.json') as f:
+            data = json.load(f)
+            key = data['MORALIS_API_KEY']
+            f.close()
+        rpc = "wss://speedy-nodes-nyc.moralis.io/{}/polygon/mumbai/ws".format(key)
+
 
     # MATIC testnet
     cardContract = {
         "addy": '0x384c8072DA488698Df87c02cDf04499262D4697f',
-        "provider": "wss://speedy-nodes-nyc.moralis.io/{}/polygon/mumbai/ws".format(key),
+        "provider": rpc,
         "kind": "WS"
     }
     start_block_file = "./doc/start_block.txt"
 
-    lo = ListeningOracle(processingIds, cardContract, start_block_file)
+    lo = ListeningOracle(processingIds, cardContract, start_block_file, provider)
     asyncio.run(lo.run())
 
