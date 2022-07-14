@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef }  from 'react'
 import { ethers } from "ethers"; 
-import { bCardAddress, bCardAbi, /* mPlaceAddress, mPlaceAbi  */} from '../../web3config';
+import { bCardAddress, bCardAbi, mPlaceAddress, mPlaceAbi } from '../../web3config';
 import GalleryCard from './GalleryCard';
 import SearchItems from './SearchItems';
 import { Form } from 'react-bootstrap';
@@ -18,7 +18,8 @@ import {
 import { Spinner } from 'react-bootstrap';
 
 const Gallery = (props) => {
-	const [isSwitchOn, setSwitch] = useState(false);
+	const [ownedSwitchOn, setOwnedSwitch] = useState(false);
+	const [marketplaceSwitchOn, setMarketplaceSwitch] = useState(false);
 	const [page, setPage] = useState(1);
 	const [totalCards, setTotalCards] = useState([]);  // All the cards that can be shown
 	const [loadedCards, setLoadedCards] = useState([]);  // Cards that have been loaded
@@ -28,13 +29,18 @@ const Gallery = (props) => {
 	// Variable changes to keep track of
 	const prevAccount = usePrevious(props.account);  // Change in account
 	const prevPage = usePrevious(page);  // Change in page
-	const prevSwitch = usePrevious(isSwitchOn);  // Change in switch
+	const prevOwnedSwitch = usePrevious(ownedSwitchOn);  // Change in switch
+	const prevMarketplaceSwitch = usePrevious(marketplaceSwitchOn)
 	const prevSearch = usePrevious(toSearch);
+
+	// Smart contracts being used inside the gallery page
+	const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, props.provider);
+    const mPlaceContract = new ethers.Contract(mPlaceAddress, mPlaceAbi, props.provider);
 
 	function usePrevious(value) {
 		const ref = useRef();
 		useEffect(() => {
-		ref.current = value;
+			ref.current = value;
 		});
 		return ref.current;
 	}
@@ -55,11 +61,12 @@ const Gallery = (props) => {
 		return(
 			<Form>
 				<Form.Check 
-					disabled={true}
+					disabled={false}  // Marketplace always enabled
 					type="switch"
 					id="switcherino"
-					label="Marketplace (soon!)"
-					checked={false}
+					label="Marketplace"
+					onChange={() => setMarketplaceSwitch(!marketplaceSwitchOn)}
+					checked={marketplaceSwitchOn}
 				/>
 			</Form>
 		)
@@ -73,8 +80,8 @@ const Gallery = (props) => {
 					type="switch"
 					id="switcherino"
 					label="Owned Business Cards"
-					onChange={() => setSwitch(!isSwitchOn)}
-					checked={isSwitchOn}
+					onChange={() => setOwnedSwitch(!ownedSwitchOn)}
+					checked={ownedSwitchOn}
 				/>
 			</Form>
 		)
@@ -161,13 +168,10 @@ const Gallery = (props) => {
 
 
 	useEffect(() => {
-		
-		const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, props.provider);
-
 		async function fetchData() {
 			// Change in account, fully resets Gallery page to loading and showing all Business Cards
-			if (props.account !== prevAccount && isSwitchOn) {  // Only if there was a previous account
-				setSwitch(false);
+			if (props.account !== prevAccount && ownedSwitchOn) {  // Only if there was a previous account
+				setOwnedSwitch(false);
 				setIsLoading(true);
 				let _totalCards = await bCardContract.totalSupply();
 				setTotalCards( Array.from({length: parseInt(_totalCards)}, (_, i) => i + 1).reverse() );
@@ -177,6 +181,7 @@ const Gallery = (props) => {
 
 			// Adds 12 more cards to the list of already loaded ones
 			const addLoadedCards = async (toLoad) => {
+				setIsLoading(true);
 
 				const lastLoadedCard = loadedCards.length;
 				// On final go will add all the remaining cards
@@ -194,7 +199,9 @@ const Gallery = (props) => {
 						<GalleryCard 
 							id={totalCards[i]} 
 							contract={bCardContract} 
+							mPlaceContract={mPlaceContract}
 							key={totalCards[i]} 
+							marketplaceSwitchOn={marketplaceSwitchOn}
 						/>
 					)
 				}
@@ -202,7 +209,6 @@ const Gallery = (props) => {
 				// Add to the loaded cards
 				setLoadedCards((prev) => [...prev, ..._newLoadedCards])
 				setIsLoading(false);
-				
 			}
 
 
@@ -212,10 +218,10 @@ const Gallery = (props) => {
 			} 
 
 
-			// Change in switch or change in search items
-			if (isSwitchOn !== prevSwitch || toSearch !== prevSearch) {
+			// Change in switches or change in search items
+			if (ownedSwitchOn !== prevOwnedSwitch || marketplaceSwitchOn !== prevMarketplaceSwitch || toSearch !== prevSearch) {
 
-				if(isSwitchOn) {  // Only user owned cards
+				if(ownedSwitchOn && !marketplaceSwitchOn) {  // Only user owned cards
 
 					setIsLoading(true);
 					// Need to get the total balance first
@@ -237,6 +243,42 @@ const Gallery = (props) => {
 					setTotalCards(_userCards.reverse());
 					setLoadedCards([]);
 
+				} else if (!ownedSwitchOn && marketplaceSwitchOn) {  // All listed cards on the marketplace
+
+					setIsLoading(true);
+					// Get all marketplace listings
+					let _listings = await mPlaceContract.fetchAvailableMarketItems();
+					var _listingList = []
+					for (let i = 0; i < _listings.length; i++) {
+						_listingList.push(_listings[i]['tokenId'])
+					}
+					
+					if (toSearch) {
+						_listingList = await filterCards(toSearch, _listingList, bCardContract)
+					}
+
+					setTotalCards(_listingList.reverse())
+					setLoadedCards([]);
+
+				} else if (ownedSwitchOn && marketplaceSwitchOn) {  // Marketplace listings made by connected account
+
+					setIsLoading(true);
+					// Get all marketplace listings
+					let _listings = await mPlaceContract.fetchAvailableMarketItems();
+					var _userListings = []
+					for (let i = 0; i < _listings.length; i++) {
+						if(_listings[i]['seller'].toLowerCase() === props.account.toLowerCase()) {
+							_userListings.push(_listings[i]['tokenId'])
+						}
+					}
+
+					if (toSearch) {
+						_userListings = await filterCards(toSearch, _userListings, bCardContract);
+					}
+
+					setTotalCards(_userListings.reverse());
+					setLoadedCards([]);
+
 				} else {  // All existing cards
 
 					setIsLoading(true);
@@ -256,21 +298,19 @@ const Gallery = (props) => {
 
 			}
 
-
 			// There are no loaded cards
 			if (loadedCards.length === 0) {
 				await addLoadedCards(12);  // Adds 12 more loaded cards
 			}
 
-
 			// Display all biz cards if account disconnects
-			if(!props.account && isSwitchOn) { 
-				setSwitch(!isSwitchOn)
+			if(!props.account && ownedSwitchOn) { 
+				setOwnedSwitch(!ownedSwitchOn)
 			}
 		}
 		fetchData()
 	// eslint-disable-next-line
-  	}, [isSwitchOn, props.account, props.provider, page, loadedCards, toSearch]); 
+  	}, [ownedSwitchOn, marketplaceSwitchOn, props.account, props.provider, page, loadedCards, toSearch]); 
 
 	
 	return (

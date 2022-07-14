@@ -134,7 +134,6 @@ const CreateListingSection = (props) => {
                 const signer = provider.getSigner();    
                 const _contract = new ethers.Contract(mPlaceAddress, mPlaceAbi, provider)
                 const mPlace = await _contract.connect(signer)
-                console.log(ethers.utils.parseUnits(listingPrice, "ether").toString())
                 await mPlace.createMarketItem(props.id, ethers.utils.parseUnits(listingPrice, "ether").toString())
             } catch(err) {
 

@@ -58,7 +58,7 @@ export const SwitchRow = styled.div`
     height: 40px;
     display: flex;
     justify-content: space-between;
-    width: 400px;
+    width: 350px;
 
     @media screen and (max-width: 1000px) {
         height: 80px;
