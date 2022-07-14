@@ -29,21 +29,21 @@ const initialState = {
     nameError: "",
     positionError: "",
     cardProperties: {
-        twitterAccount: "",
-        telegramAccount: "",
-        telegramGroup: "",
-        discordAccount: "",
-        discordGroup: "",
-        githubAccount: "",
+        twitter_account: "",
+        telegram_account: "",
+        telegram_group: "",
+        discord_account: "",
+        discord_group: "",
+        github_username: "",
         website: ""
     },
     cardPropertiesError: {
-        twitterAccount: null,
-        telegramAccount: null,
-        telegramGroup: null,
-        discordAccount: null,
-        discordGroup: null,
-        githubAccount: null,
+        twitter_account: null,
+        telegram_account: null,
+        telegram_group: null,
+        discord_account: null,
+        discord_group: null,
+        github_username: null,
         website: null
     },
     liveName: "",
@@ -57,17 +57,17 @@ const inputs = {
     placeholder_text_1: 'Your name',
     id_2: 'position',
     placeholder_text_2: 'Your position',
-    id_3: 'twitterAccount',
+    id_3: 'twitter_account',
     placeholder_text_3: 'Twitter account',
-    id_4: 'telegramAccount',
+    id_4: 'telegram_account',
     placeholder_text_4: 'Telegram account',
-    id_5: 'telegramGroup',
+    id_5: 'telegram_group',
     placeholder_text_5: 'Telegram group',
-    id_6: 'githubAccount',
+    id_6: 'github_username',
     placeholder_text_6: 'Github account',
-    id_7: 'discordAccount',
+    id_7: 'discord_account',
     placeholder_text_7: 'Discord account',
-    id_8: 'discordGroup',
+    id_8: 'discord_group',
     placeholder_text_8: 'Discord group',
     id_9: 'website',
     placeholder_text_9: 'Website',
@@ -75,7 +75,39 @@ const inputs = {
 
 class ChangeNameSection extends React.Component {
 
-    state = initialState;
+    /* initialState['cardProperties'] = props.metadata.attributes */
+
+    state = {
+        name: this.props.metadata.card_name,
+        currentName: this.props.metadata.card_name,
+        position: this.props.metadata.card_position,
+        nameError: "",
+        positionError: "",
+        cardProperties: this.props.metadata.card_properties,
+        cardPropertiesError: {
+            twitter_account: null,
+            telegram_account: null,
+            telegram_group: null,
+            discord_account: null,
+            discord_group: null,
+            github_username: null,
+            website: null
+        },
+        liveName: "",
+        livePosition: "",
+        screen: 1,
+        awaitingTx: false,
+    };
+    
+    /* setState({ cardProperties: })
+
+    componentDidUpdate(prevProps) {
+        console.log('SNEED')
+        console.log(prevProps.metadata)
+        if (prevProps.metadata !== this.props.metadata) {
+            console.log('CHUCK')
+        }
+    } */
 
     handleChange = event => {
 
@@ -104,9 +136,9 @@ class ChangeNameSection extends React.Component {
             let errorMessage = null;
             let cardPropertiesError = this.state.cardPropertiesError
 
-            if (event.target.name === 'twitterAccount') {
+            if (event.target.name === 'twitter_account') {
                 const format = /^[a-zA-Z0-9_]*$/;
-                if(event.target.value.length < 3) {
+                if(event.target.value.length < 3 && event.target.value.length > 0) {
                     errorMessage = 'Must be more than 3 characters'
                 } else if (event.target.value.length > 15) {
                     errorMessage = 'Must be less than 15 characters'
@@ -118,9 +150,9 @@ class ChangeNameSection extends React.Component {
                 } 
             }
 
-            if (event.target.name === 'telegramAccount' || event.target.name === 'telegramGroup' || event.target.name === 'discordGroup') {
+            if (event.target.name === 'telegram_account' || event.target.name === 'telegram_group' || event.target.name === 'discord_group') {
                 const format = /^[a-zA-Z0-9_]*$/;
-                if(event.target.value.length < 5) {
+                if(event.target.value.length < 5 && event.target.value.length > 0) {
                     errorMessage = 'Must be more than 5 characters'
                 } else if (event.target.value.length > 32) {
                     errorMessage = 'Must be less than 32 characters'
@@ -132,7 +164,7 @@ class ChangeNameSection extends React.Component {
                 } 
             }
 
-            if (event.target.name === 'discordAccount') {
+            if (event.target.name === 'discord_account') {
                 const format = /^[0-9]{18}$/;
                 if (!format.test(event.target.value)) {
                     errorMessage = 'Discord ID is 18 digits long'
@@ -140,9 +172,9 @@ class ChangeNameSection extends React.Component {
                 }
             }
 
-            if (event.target.name === 'githubAccount') {
+            if (event.target.name === 'github_username') {
                 const format = /^[a-zA-Z0-9\d](?:[a-zA-Z0-9\d]|-(?=[a-zA-Z0-9\d]))*$/;
-                if(event.target.value.length < 4) {
+                if(event.target.value.length < 4 && event.target.value.length > 0) {
                     errorMessage = 'Must be more than 4 characters'
                 } else if (event.target.value.length > 39) {
                     errorMessage = 'Must be less than 39 characters'
@@ -269,7 +301,7 @@ class ChangeNameSection extends React.Component {
         /* name already taken, checks the smart contract */
         const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, this.props.provider);
         let _nameTaken = await bCardContract.isNameReserved(this.state.name.trim())
-        if (_nameTaken) {
+        if (_nameTaken && this.state.name.trim() !== this.state.currentName) {
             nameError = "Name is already taken, choose another one"
         }
 
@@ -292,18 +324,16 @@ class ChangeNameSection extends React.Component {
         const cardProperties = this.state.cardProperties;
 
         const _properties = [
-            cardProperties['twitterAccount'], 
-            cardProperties['telegramAccount'], 
-            cardProperties['telegramGroup'], 
-            (cardProperties['discordAccount'] === "") ? '0' : cardProperties['discordAccount'],
-            cardProperties['discordGroup'],
-            cardProperties['githubAccount'],
+            cardProperties['twitter_account'], 
+            cardProperties['telegram_account'], 
+            cardProperties['telegram_group'], 
+            (cardProperties['discord_account'] === "") ? '0' : cardProperties['discord_account'],
+            cardProperties['discord_group'],
+            cardProperties['github_username'],
             cardProperties['website'].trim(),
         ]
 
         if (isValid) {
-
-
 
             try {
                 // Gontract for buying
@@ -315,15 +345,18 @@ class ChangeNameSection extends React.Component {
                 const connectedContract = await _contract.connect(signer)
                 const properties = [this.state.position.trim()].concat(_properties)
 
-                await connectedContract.updateCard(this.props.id, this.state.name.trim(), properties, { value: updatePrice })
-
-                // Empty all fields when tx is successful
-                this.setState(initialState);
+                let _name;
+                if (this.state.name.trim() !== this.state.currentName) {
+                    _name = this.state.name.trim()
+                } else {
+                    _name = ""  // User wishes to keep the same name, we need to send an empty string to the smart contract
+                }
+                await connectedContract.updateCard(this.props.id, _name, properties, { value: updatePrice })
             } catch (err) {
                 console.log(err)
-                // User can try and mint again
+            } finally {
                 this.setState({ awaitingTx: false })
-            } 
+            }
 
         } else {
             this.setState({ awaitingTx: false })
@@ -412,12 +445,12 @@ class ChangeNameSection extends React.Component {
                             placeholder={inputs.placeholder_text_3} 
                             name={inputs.id_3} 
                             id={inputs.id_3}  
-                            value={this.state.cardProperties['twitterAccount']}
+                            value={this.state.cardProperties['twitter_account']}
                             onChange={this.handleChange}
                         />
                         <label htmlFor={inputs.id_3} className="form__label">{inputs.placeholder_text_3}</label>
                         <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
-                            {this.state.cardPropertiesError['twitterAccount']}
+                            {this.state.cardPropertiesError['twitter_account']}
                         </div>
                     </div>
                 </TextWrapper>
@@ -434,12 +467,12 @@ class ChangeNameSection extends React.Component {
                             name={inputs.id_4} 
                             id={inputs.id_4} 
                             required 
-                            value={this.state.cardProperties['telegramAccount']}
+                            value={this.state.cardProperties['telegram_account']}
                             onChange={this.handleChange}
                         />
                         <label htmlFor={inputs.id_4} className="form__label">{inputs.placeholder_text_4}</label>
                         <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
-                            {this.state.cardPropertiesError['telegramAccount']}
+                            {this.state.cardPropertiesError['telegram_account']}
                         </div>
                     </div>
                 </TextWrapper>
@@ -452,12 +485,12 @@ class ChangeNameSection extends React.Component {
                             name={inputs.id_5} 
                             id={inputs.id_5} 
                             required 
-                            value={this.state.cardProperties['telegramGroup']}
+                            value={this.state.cardProperties['telegram_group']}
                             onChange={this.handleChange}
                         />
                         <label htmlFor={inputs.id_5} className="form__label">{inputs.placeholder_text_5}</label>
                         <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
-                            {this.state.cardPropertiesError['telegramGroup']}
+                            {this.state.cardPropertiesError['telegram_group']}
                         </div>
                     </div>
                 </TextWrapper>
@@ -469,12 +502,12 @@ class ChangeNameSection extends React.Component {
                             placeholder={inputs.placeholder_text_6} 
                             name={inputs.id_6} 
                             id={inputs.id_6} 
-                            value={this.state.cardProperties['githubAccount']}
+                            value={this.state.cardProperties['github_username']}
                             onChange={this.handleChange}
                         />
                         <label htmlFor={inputs.id_6} className="form__label">{inputs.placeholder_text_6}</label>
                         <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
-                            {this.state.cardPropertiesError['githubAccount']}
+                            {this.state.cardPropertiesError['github_username']}
                         </div>
                     </div>
                 </TextWrapper>
@@ -482,7 +515,7 @@ class ChangeNameSection extends React.Component {
         } else if (this.state.screen===3) {
             screenComponent = 
             <>
-            <TextWrapper key='box7'>
+                <TextWrapper key='box7'>
                     <div className="form__group field">
                         <input 
                             type="input" 
@@ -491,12 +524,12 @@ class ChangeNameSection extends React.Component {
                             name={inputs.id_7} 
                             id={inputs.id_7} 
                             required 
-                            value={this.state.cardProperties['discordAccount']}
+                            value={this.state.cardProperties['discord_account']}
                             onChange={this.handleChange}
                         />
                         <label htmlFor={inputs.id_7} className="form__label">{inputs.placeholder_text_7}</label>
                         <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
-                            {this.state.cardPropertiesError['discordAccount']}
+                            {this.state.cardPropertiesError['discord_account']}
                         </div>
                     </div>
                 </TextWrapper>
@@ -509,12 +542,12 @@ class ChangeNameSection extends React.Component {
                             name={inputs.id_8} 
                             id={inputs.id_8} 
                             required 
-                            value={this.state.cardProperties['discordGroup']}
+                            value={this.state.cardProperties['discord_group']}
                             onChange={this.handleChange}
                         />
                         <label htmlFor={inputs.id_8} className="form__label">{inputs.placeholder_text_8}</label>
                         <div style={{ fontSize:15, color: "red", position: 'absolute'}}>
-                            {this.state.cardPropertiesError['discordGroup']}
+                            {this.state.cardPropertiesError['discord_group']}
                         </div>
                     </div>
                 </TextWrapper>

@@ -29,6 +29,10 @@ const ModalWrapper = styled.div`
 
   display: flex;
   align-items: center;
+
+  @media screen and (max-width: 820px) {
+    height: 90px;
+  }
 `;
 
 const ModalContent = styled.div`

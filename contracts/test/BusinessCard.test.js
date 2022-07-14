@@ -1,4 +1,4 @@
-const {
+/* const {
     shouldBehaveLikeBusinessCard,
   } = require('./BusinessCard.behavior');
   
@@ -16,4 +16,4 @@ contract('Business Card', function (accounts) {
   });
 
   shouldBehaveLikeBusinessCard(baseURI, defaultURI, ...accounts);
-});
+}); */

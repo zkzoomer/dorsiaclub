@@ -4,7 +4,7 @@
  * following start of trading, plus taking out the safeTransfer functionality to save gas -- assuming it on the frontend
  */
 
-const {
+/* const {
     shouldBehaveLikeERC721,
     shouldBehaveLikeERC721Metadata,
     shouldBehaveLikeERC721Enumerable,
@@ -28,4 +28,4 @@ contract('ERC721', function (accounts) {
   shouldBehaveLikeERC721('ERC721', ...accounts);
   shouldBehaveLikeERC721Metadata('ERC721', name, symbol, ...accounts);
   shouldBehaveLikeERC721Enumerable('ERC721', ...accounts)
-});
+}); */

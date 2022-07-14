@@ -11,7 +11,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import './dropdown.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { 
-    SwapDropdownWrapper,
+    SwapCardsWrapper,
     SwapButtonWrapper,
     StyledDropdownButton,
     SwapNameText,
@@ -146,29 +146,27 @@ const SwapNameSection = (props) => {
     }, [props.account, props.chainId, value]) 
 
     return(
-        <div>
+        <SwapCardsWrapper>
             <SwapNameTextWrapper>
                 <SwapNameText>
                     Select a Business Card to swap name and position with:
                 </SwapNameText>
             </SwapNameTextWrapper>
-            <SwapDropdownWrapper>
-                <StyledDropdownButton 
-                title={value} 
-                onSelect={handleSelect}
-                style={{width: '400px !important' }}
-                variant='dark'
-                >
-                    {isLoading ? 
-                        <SpinnerContainer><Spinner animation="border"/></SpinnerContainer> : 
-                        ownedCardsItems
-                    }
-                </StyledDropdownButton>
-            </SwapDropdownWrapper>
+            <StyledDropdownButton 
+            title={value} 
+            onSelect={handleSelect}
+            style={{width: '400px !important' }}
+            variant='dark'
+            >
+                {isLoading ? 
+                    <SpinnerContainer><Spinner animation="border"/></SpinnerContainer> : 
+                    ownedCardsItems
+                }
+            </StyledDropdownButton>
             <SwapButtonWrapper>
                 {buttonComponent}
             </SwapButtonWrapper>
-        </div>
+        </SwapCardsWrapper>
     )
 }
 

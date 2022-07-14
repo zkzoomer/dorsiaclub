@@ -17,10 +17,8 @@ import {
     FaDiscord,
     FaGithub,
     FaGlobeAmericas, 
-    FaGlobe,
 } from "react-icons/fa";
 import './fontclasses.css';
-import { AccordionButton } from 'react-bootstrap';
 
 
 // Gets fed the token metadata via this.props.tokenMetadataJSON
@@ -43,7 +41,7 @@ const AttributesSection = (props) => {
         'twitter_account': "",
         'telegram_account': "",
         'telegram_group': "",
-        'discord_account': "0",
+        'discord_account': "",
         'discord_group': "",
         "github_username": "",
         "website": "",
@@ -77,7 +75,6 @@ const AttributesSection = (props) => {
 
     useEffect(() => {
         if(props.metadata) {
-            console.log(props.metadata)
             setName(props.metadata.card_name)
             setPosition(props.metadata.card_position)
 
@@ -158,15 +155,15 @@ const AttributesSection = (props) => {
             }
             <AttributeLinks>
                 {   // Twitter account
-                    properties['twitter_account'] != "" ? 
+                    properties['twitter_account'] !== "" ? 
                         getLink(<FaTwitter />, '', `https://www.twitter.com/${properties['twitter_account']}`)
                         :
                         <div/>
                 }
                 {   // Telegram account and/or group
-                    properties['telegram_account'] != "" || properties['telegram_group'] != "" ?
+                    properties['telegram_account'] !== "" || properties['telegram_group'] !== "" ?
                         // At least one of them is specified
-                        properties['telegram_account'] != "" && properties['telegram_group'] != "" ?  
+                        properties['telegram_account'] !== "" && properties['telegram_group'] !== "" ?  
                                 // Both are specified
                                 getLink(
                                     <FaTelegramPlane />, ['Telegram account', 'Telegram group'], 
@@ -174,7 +171,7 @@ const AttributesSection = (props) => {
                                 )
                             :
                                 // Only one of them is specified
-                                properties['telegram_account'] != "" ?
+                                properties['telegram_account'] !== "" ?
                                     // The account is specified
                                     getLink(
                                         <FaTelegramPlane />, 'Telegram account', 
@@ -191,9 +188,9 @@ const AttributesSection = (props) => {
                         <div/>
                 }
                 {   // Discord account and/or group
-                    properties['discord_account'] != "0" || properties['discord_group'] != "" ?
+                    properties['discord_account'] !== "" || properties['discord_group'] !== "" ?
                         // At least one of them is specified
-                        properties['discord_account'] != "0" && properties['discord_group'] != "" ?  
+                        properties['discord_account'] !== "" && properties['discord_group'] !== "" ?  
                                 // Both are specified
                                 getLink(
                                     <FaDiscord />, ['Discord account', 'Discord group'], 
@@ -201,7 +198,7 @@ const AttributesSection = (props) => {
                                 )
                             :
                                 // Only one of them is specified
-                                properties['discord_account'] != "0" ?
+                                properties['discord_account'] !== "" ?
                                     // The account is specified
                                     getLink(
                                         <FaDiscord />, 'Discord account', 
@@ -218,13 +215,13 @@ const AttributesSection = (props) => {
                         <div/>
                 }
                 {   // Github account
-                    properties['github_username'] != "" ? 
+                    properties['github_username'] !== "" ? 
                         getLink(<FaGithub />, '', `https://github.com/${properties['github_username']}`)
                         :
                         <div/>
                 }
                 {   // Website
-                    properties['website'] != "" ? 
+                    properties['website'] !== "" ? 
                         getLink(<FaGlobeAmericas />, '', properties['website'])
                         :
                         <div/>

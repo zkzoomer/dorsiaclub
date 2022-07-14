@@ -107,8 +107,12 @@ class ListeningOracle():
         try:
             self.nonce = self.web3.eth.get_transaction_count(self.addy)
         except:
-            todump = { "provider": "getblock" if provider == "moralis" else "moralis" }
-            print(todump)
+            if provider == "moralis":
+                todump = { "provider": "getblock" }
+            elif provider == "getblock":
+                todump = { "provider": "quicknode" }
+            elif provider == "quicknode":
+                todump = { "provider": "moralis" }
             with open('./doc/node.json', 'w') as f:
                 json.dump(todump, f)
                 f.close()
@@ -159,17 +163,18 @@ class ListeningOracle():
         for i in range(26 - len(genes)):
             genes = '0' + genes
 
-        # Contrast, keep those properties where new is ""/0, update those with values
+        # Contrast, keep card name/position if specified as "" -- LEGACY on the position side
         if name == "":
             name = current_metadata['card_name']
         if position == "":
             position = current_metadata['card_position']
         new_properties = {}
         for dict_key, dict_value in event_properties.items():
-            if dict_value == "" or dict_value == 0:
+            new_properties[dict_key] = str(event_properties[dict_key])  # Taking properties AS IS
+            """if dict_value == "" or dict_value == 0:
                 new_properties[dict_key] = current_properties[dict_key]
             else:
-                new_properties[dict_key] = str(event_properties[dict_key])  # The discord account ID will be made string
+                new_properties[dict_key] = str(event_properties[dict_key])  # The discord account ID will be made string"""
 
         # Use this name, position to generate a new card and get the ipfs hash
         newcardwhatdoyouthink = Card(tokenId, name, position, genes, new_properties)
@@ -458,7 +463,12 @@ if __name__ == '__main__':
             key = data['MORALIS_API_KEY']
             f.close()
         rpc = "wss://speedy-nodes-nyc.moralis.io/{}/polygon/mumbai/ws".format(key)
-
+    elif provider == "quicknode":
+        with open('doc/ENDPOINT_API.json') as f:
+            data = json.load(f)
+            key = data['QUICKNODE_API_KEY']
+            f.close()
+        rpc = "wss://delicate-bold-night.matic-testnet.discover.quiknode.pro/{}/".format(key)
 
     # MATIC testnet
     cardContract = {

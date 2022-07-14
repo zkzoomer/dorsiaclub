@@ -4,10 +4,16 @@ import {
     defaultURI,
     bCardAddress,
     bCardAbi,
+    mPlaceAddress,
+    mPlaceAbi,
+    mPlaceOracleFee,
 } from '../../web3config';
 import AttributesSection from './Attributes';
 import ChangeNameSection from './ChangeName';
 import SwapNameSection from './SwapNames';
+import BuyTokenSection from './BuyToken';
+import CancelListingSection from './CancelListing';
+import CreateListingSection from './CreateListing';
 import {
     PageContainer,
     TokenContainer, 
@@ -22,19 +28,25 @@ import {
     OptionsMenu,
     VerticalSeparationBar,
     OptionsButton,
-    OptionsMenuWrapper
+    OptionsMenuWrapper,
+    SubSectionWrapper,
+    SubSectionMenu,
+    MarketplacePricingMenu
 } from './TokenSectionsElements';
 
 const TokenPageElements = (props) => {
     // Sections are: Attributes, Change name, Swap names; starts always on attributes
-    const [currentSection, setCurrentSection] = useState('Attributes');
-    const [ownsToken, setOwnsToken] = useState(false);
+    const [currentSection, setCurrentSection] = useState('Traits');
+    const [subSection, setSubSection] = useState('Update card');
+    const [owner, setOwner] = useState("");  // which can be the connected `account`, the `marketplace` or `other`
+    const [sectionsList, setSectionsList] = useState([{ sectionName: "Traits" }]);
     const [tokenMetadata, setTokenMetadata] = useState(null);
     const [descriptionText, setDescriptionText] = useState("");
     const [loadingText, setLoadingText] = useState("");
 
     // Smart contracts being used inside the token page
 	const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, props.provider);
+    const mPlaceContract = new ethers.Contract(mPlaceAddress, mPlaceAbi, props.provider);
     /* const mPlaceContract = null;
     const sCardContract = null; */
 
@@ -55,6 +67,12 @@ const TokenPageElements = (props) => {
 
     useEffect(() => {
         async function fetchData() {
+            // Check if connected account is owner of this Business Card
+            let _cardOwner = null;
+            let price = 0;
+            let listing_id = 0;
+            let isApproved = false;
+
             // Will update the metadata only once
             if (!tokenMetadata) {
                 
@@ -70,61 +88,77 @@ const TokenPageElements = (props) => {
                     } else { // Token has been updated
                         setLoadingText("")
                         setDescriptionText("")
+                        // Small modification to the data, we set the discord account to be "" if it is "0"
+                        data.card_properties.discord_account = data.card_properties.discord_account === "0" ? "" : data.card_properties.discord_account
+                        _cardOwner = await bCardContract.ownerOf(props.id);
+                        if (props.account === _cardOwner.toLowerCase()) {
+                            isApproved = await bCardContract.isApprovedForAll(props.account, mPlaceContract.address)
+                        } else if (mPlaceAddress.toLowerCase() === _cardOwner.toLowerCase()) {
+                            const listing = await mPlaceContract.getLatestMarketItemByTokenId(props.id)
+                            price = ethers.utils.formatEther(listing[0]['price'])
+                            listing_id = listing[0]['itemId'].toString()
+                        }
+                        data['listing_price'] = price;
+                        data['listing_id'] = listing_id;
+                        data['is_approved'] = isApproved;
                         setTokenMetadata(data);
                     }
                 } catch (err) { // Token does not exist
                     setDescriptionText("This Business Card has not been minted yet")
                 }
-
             }
 
+            try {
+                _cardOwner = await bCardContract.ownerOf(props.id);
+                if (props.account === _cardOwner.toLowerCase()) {
+                    isApproved = await bCardContract.isApprovedForAll(props.account, mPlaceContract.address)
+                    setDescriptionText("You are the owner of this Business Card")
+                    setOwner("account")
+                    setSectionsList([{ sectionName: "Traits" }, { sectionName: "Modify" }, { sectionName: "Trade" }, { sectionName: "Send" }])
+                } else if (mPlaceAddress.toLowerCase() === _cardOwner.toLowerCase()) {
+                    // If the card owner is the marketplace, it may be an `account` listing or `other`
+                    const listing = await mPlaceContract.getLatestMarketItemByTokenId('1')
+                    if (listing[0]['seller'].toLowerCase() === props.account) {
+                        setOwner("marketplaceConnectedAccount")
+                    } else if (props.account !== "") {
+                        setOwner("marketplaceAddress")
+                    }
+                    setSectionsList(
+                        (props.account !== "" && typeof props.account !== "undefined") ? 
+                            [{ sectionName: "Traits" }, { sectionName: "Trade" }]
+                        :
+                            [{ sectionName: "Traits" }]
+                        )
+                } else {
+                    setOwner("other");
+                    setSectionsList(
+                        (props.account !== "" && typeof props.account !== "undefined") ? 
+                            [{ sectionName: "Traits" }, { sectionName: "Send" }] 
+                        : 
+                            [{ sectionName: "Traits" }]
+                    )
+                }
+            } catch (err) {
+                
+            }
 
             // Change of accounts, revert to attribute page if not already there
-            if (prevAccount !== props.account && currentSection !== 'Attributes') {
-                setCurrentSection('Attributes')
+            if (prevAccount !== props.account && currentSection !== 'Traits') {
+                setCurrentSection('Traits')
             }
-
-
-            // Check if connected account is owner of this Business Card
-            try {
-                let owner = null;
-                owner = await bCardContract.ownerOf(props.id);
-                if (props.account === owner.toLowerCase()) {
-                    setDescriptionText("You are the owner of this Business Card")
-                    setOwnsToken(true)
-                } else {
-                    setOwnsToken(false);
-                }
-            } catch (err) {}
         }
         fetchData()
+
     // eslint-disable-next-line
-    }, [props.account, ownsToken])
+    }, [props.account, owner])
 
 
     // Sections shown will depend on wether the token is owned or not
-    let SectionsList = (ownsToken) 
-        ? [
-            {
-                sectionName: "Attributes",
-            },
-            // These only get activated IF the token is owned by the connected wallet
-            // How it works: await for the token ownership in the back, meanwhile these remain active
-            {
-                sectionName: "Modify",
-            },
-            {
-                sectionName: "Swap",
-            }
-        ]
-        : [
-            {
-                sectionName: "Attributes",
-            }
-        ]
+    let SectionsList;
+    
 
     // Option buttons shown to the user depending on his ownership status
-    const optionsList = SectionsList.map(({sectionName}, index) => {
+    const optionsList = sectionsList.map(({sectionName}, index) => {
         return(
             <React.Fragment key={index}>
                 {(index > 0) ? 
@@ -150,19 +184,83 @@ const TokenPageElements = (props) => {
         )
     })
 
+    let SubSectionsList = [
+        {
+            subSectionName: "Update card",
+        },
+        {
+            subSectionName: "Swap cards",
+        },
+    ]
+
+    const subSectionList = SubSectionsList.map(({subSectionName}, index) => {
+        return(
+            <React.Fragment key={index}>
+                {(index > 0) ? 
+                    <div>
+                        <VerticalSeparationBar />
+                    </div>
+                    :
+                    <div />
+                }
+                <OptionsButton 
+                    type='optionButton'
+                    id={subSectionName}
+                    onClick={ () => { 
+                        setSubSection(subSectionName)
+                    }}
+                    className={
+                        subSection === subSectionName ? 'active' : ''
+                    }
+                > 
+                    {subSectionName}
+                </OptionsButton>
+            </React.Fragment>
+        )
+    })
+
     // Displaying the different options components depending on the clicked one, the status of this.state.sectionName
     let section = null;
-    if (currentSection === 'Attributes') {
+    if (currentSection === 'Traits') {
         section = <AttributesSection metadata={tokenMetadata}/>
-    } 
-    if (currentSection === 'Modify') {
-        section = <ChangeNameSection id={props.id} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>;
-    } 
-    if (currentSection === 'Swap') {
-        section = <SwapNameSection id={props.id} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>;
+    } else if (currentSection === 'Modify') {
+        section = (
+            <SubSectionWrapper>
+                <SubSectionMenu>
+                    {subSectionList}
+                </SubSectionMenu>
+                {
+                subSection === "Update card" ?
+                    <ChangeNameSection id={props.id} metadata={tokenMetadata} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>
+                :
+                    <SwapNameSection id={props.id} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>
+                }
+            </SubSectionWrapper>
+        )    
+    } else if (currentSection === 'Trade') {
+        if (owner === 'account') {
+            section = (<CreateListingSection id={props.id} isApproved={tokenMetadata['is_approved']} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage} />)
+        } else if (owner === 'marketplaceAddress') {
+            // Can buy the token
+            section = (
+                <SubSectionWrapper>
+                    <BuyTokenSection id={props.id} metadata={tokenMetadata} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>
+                    <MarketplacePricingMenu>
+                        Listing price: {tokenMetadata['listing_price']} MATIC <br />
+                        Oracle fee: {ethers.utils.formatEther(mPlaceOracleFee)} MATIC
+                    </MarketplacePricingMenu>
+                </SubSectionWrapper>
+            )
+        } else if (owner === 'marketplaceConnectedAccount') {
+            section = (<CancelListingSection id={props.id} metadata={tokenMetadata} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage} />)
+        }
+    } else if (currentSection === 'Send') {
+        section = (
+            <div>
+                SNEED
+            </div>
+        )
     }
-
-    console.log("SECTION: ", section)
 
     const Description = () => {
         if (descriptionText) {
@@ -200,9 +298,7 @@ const TokenPageElements = (props) => {
                         <Column2>
                             <ImgWrap>
                                 <Img src={tokenMetadata ? tokenMetadata.image : require('../../images/placeholder_card.png')}/>
-                                <ImgDescription>
-                                    <Description />
-                                </ImgDescription>
+                                <Description />
                             </ImgWrap>
                         </Column2>
                     </InfoRow>

@@ -10,6 +10,7 @@ describe('Contract: Marketplace', function () {
 
   const mintPrice = ethers.utils.parseEther('0.1');
   const updatePrice = ethers.utils.parseEther('0.05');
+  const belowMinimumPrice = ethers.utils.parseEther('0.049');
   const oracleFee = ethers.utils.parseEther('0.015');
   const oracleCallbackTokenURI = 'Ur63bgQq3VWW9XsVviDGAFwYEZVs9AFWsTd56T9xCQmf'
 
@@ -189,15 +190,19 @@ describe('Contract: Marketplace', function () {
     expect(marketItemResult).to.eql([emptyMarketItem, false])
   })
 
-  it('reverts a Market Item creation if price is 0', async function () {
+  it('reverts a Market Item creation is below minimum listing price', async function () {
     // Arrange
     const tokenId = 1
-    const price = ethers.utils.parseEther('0')
 
     // Act and Assert
-    expect(mintTokenAndCreateMarketItem(tokenId, price))
-      .to.be.revertedWith("Business Cards are not free!")
+    expect(mintTokenAndCreateMarketItem(tokenId, belowMinimumPrice))
+      .to.be.revertedWith("Price too low")
+
+    mintTokenAndCreateMarketItem(tokenId, updatePrice)
   })
+
+    // This one clears
+    
 
   it('creates a Market Sale', async function () {
     // Arrange

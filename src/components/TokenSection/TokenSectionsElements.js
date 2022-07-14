@@ -13,7 +13,8 @@ export const TokenContainer = styled.div`
     @media screen and (max-width: 768px) {
         overflow-x: hidden;
         overflow-y: hidden;
-        height: 120vh;
+        height: 100%;
+        padding-bottom: 50px;
     }
 `
 
@@ -45,25 +46,48 @@ export const OptionsMenuWrapper = styled.div`
     align-items: center;
     margin-left: auto;
     margin-right: auto;
-
-    @media screen and (max-width: 768px) {
-        margin-left: 0px;
-    };
 `
 
 export const OptionsMenu = styled.div`
-    justify-self: flex-start;
     display: flex;
     height: 50px;
     align-items: center;
     position: relative;
     width: 40%;
     
-
     @media screen and (max-width: 768px) {
+        justify-content: center;
         width: 100%;
         height: 30px;
     };
+`
+
+export const SubSectionWrapper = styled.div`
+    padding-top: 50px;
+
+    @media screen and (max-width: 768px) {
+        margin-right: -10%;
+        margin-left: -10%;
+    };
+`
+
+export const SubSectionMenu = styled.div`
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-left: 4px;
+`
+
+export const MarketplacePricingMenu = styled.div`
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-size: 1.2rem;
+    padding-top: 30px;
 `
 
 export const InfoWrapper = styled.div`
@@ -77,8 +101,8 @@ export const InfoWrapper = styled.div`
     
 
     @media screen and (max-width: 768px) {
-        /* margin-left: 30px;
-        margin-right: 30px; */
+        margin-left: 0px;
+        margin-right: 0px;
     }
 `
 
@@ -99,10 +123,10 @@ export const Column1 = styled.div`
     color: var(--main-text);
     position: relative;
     justify-content: center;
-    padding-top: 10%;
     margin-bottom: 0px;
 
     @media screen and (max-width: 768px) {
+        min-height: 480px;
         height: 100%;
         /* padding-top: 20px; */
         padding-bottom: 10%;
@@ -124,6 +148,7 @@ export const ImgWrap = styled.div`
 `
 
 export const ImgDescription = styled.div`   
+    padding-top: 20px;
     color: white;
     font-size: 1.1rem;
     height: 100%;
@@ -174,15 +199,14 @@ export const OptionsButton = styled.button.attrs({
 `
 
 export const AttributeWrapper = styled.div`
-    margin-top: -10%;
     padding-top: 15px;
     top: 0;
     font-size: 1.25rem;
     height: 100%;
 
     @media screen and (max-width: 768px) {
-        font-size: 1rem;
-        padding-top: 15px;
+        font-size: 1.25rem;
+        padding-top: 25px;
     };
 `
 
@@ -284,6 +308,7 @@ export const TextWrapper = styled.div`
     padding-top: 0px;
     padding-bottom: 15px;
     margin-left: 0%;
+    height: 90px;
     width: 100%;
     position: relative;
     display: flex;
@@ -314,7 +339,7 @@ export const EnabledButton = styled.button`
     border: none;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
-    width: 50%;
+    width: 100%;
     filter: drop-shadow(10px 10px 5px rgba(0,0,0,0.5));
 
     &:hover {
@@ -325,7 +350,7 @@ export const EnabledButton = styled.button`
 `
 
 export const DisabledButton = styled.button`
-width: 50%;
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -358,26 +383,36 @@ export const ChangeInputButton = styled.button`
     }
 `
 
-export const SwapDropdownWrapper = styled.div`
+export const SwapCardsWrapper = styled.div`
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 `
 
 export const SwapButtonWrapper = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-top: 15px;
-    width: 70%;
-    margin-left: 5%;
+    width: 50%;
 
     @media screen and (max-width: 768px) {
-        margin-left: 15%;
+        width: 69%;
     };
 `
 
 export const StyledDropdownButton = styled(DropdownButton)`
-    width: 100%; 
-    margin-left: 5%;
+    width: 72%; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-overflow: ellipsis;
 
     @media screen and (max-width: 768px) {
-        margin-left: 15%;
+        width: 100%;
     };
 `
 
@@ -386,11 +421,10 @@ export const ChangeNameWrapper = styled.div`
 `
 
 export const SwapNameTextWrapper = styled.div`
-    width: 70%;
-    margin-left: 5%;
+    width: 100%;
 
     @media screen and (max-width: 768px) {
-        width: 100%;
+        width: 75%;
         margin-left: 0%;
     };
 `
@@ -408,3 +442,4 @@ export const SpinnerContainer = styled.div`
     justify-content: center;
     align-items: center;
 `
+

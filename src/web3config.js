@@ -26,13 +26,11 @@ export const network = {
 export const bCardAddress = '0x384c8072DA488698Df87c02cDf04499262D4697f'
 export const bCardAbi = require('./abis/BusinessCard.json')['abi']
 
-export const mPlaceAddress = null;
-export const mPlaceAbi = null;
+export const mPlaceAddress = "0x06F3190bcd140b38937191e5572F8ffbbC60B482";
+export const mPlaceAbi = require('./abis/Marketplace.json')['abi'];
 
-export const sCardAddress = null;
-export const sCardAbi = null;
-/* export const _provider = new ethers.providers.JsonRpcProvider(RPC)
-export const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, _provider) */
+export const sCardAddress = "0x333C380ac35C702EA22D431dAbe11B3AB31e56dF";
+export const sCardAbi = require('./abis/SoulboundCard.json')['abi'];
 
 // Default URI fed to the smart contract
 export const defaultURI = 'https://dorsiaclub.mypinata.cloud/ipfs/QmbFp3rybuvZ7j9e4xB6WLedu8gvLcjbVqUrGUEugQWz9u'
@@ -40,6 +38,9 @@ export const defaultURI = 'https://dorsiaclub.mypinata.cloud/ipfs/QmbFp3rybuvZ7j
 // Card minting and updating requirements
 export const mintPrice = ethers.utils.parseUnits("0.1","ether");
 export const updatePrice = ethers.utils.parseUnits("0.05","ether");
+export const _updatePrice = 0.05;
+
+export const mPlaceOracleFee = ethers.utils.parseUnits("0.015", "ether")
 
 // Card naming requirements
 export const maxNameLength = 22;

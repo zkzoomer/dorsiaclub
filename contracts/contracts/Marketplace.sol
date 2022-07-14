@@ -45,6 +45,8 @@ contract Marketplace is ReentrancyGuard, Ownable {
     IBusinessCard immutable bCard;
     // Oracle fee, fixed as it is the same one used for BusinessCard
     uint256 public oracleFee = 0.015 ether;
+    // Minimum listing price, equal to the update price in bCard
+    uint256 public minimumPrice = 0.05 ether;
 
     bool public saleStarted;
 
@@ -93,7 +95,7 @@ contract Marketplace is ReentrancyGuard, Ownable {
      */
     function createMarketItem(uint256 tokenId, uint256 price) external payable nonReentrant returns (uint256) {
         require(saleStarted == true, "Marketplace is paused");
-        require(price > 0, "Business Cards are not free!");
+        require(price >= minimumPrice, "Price too low");
 
         _itemIds.increment();
         uint256 itemId = _itemIds.current();
