@@ -343,6 +343,16 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
                 })
             })
 
+            context('when sending a card to the owner', function () {
+                it('reverts', async function () {
+                    await expectRevert(
+                        this.sCard.sendSoulboundCard(owner, owner, 1, { from: owner })
+                        ,
+                        "SCARD: sending to owner"
+                    )
+                })
+            })
+
             context('when the receiver blacklisted themselves', function () {
                 it('reverts', async function () {
                     await this.sCard.disableSoulboundCardsForAddress(receiver, { from: receiver })
@@ -889,8 +899,7 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
                 })
             })
 
-            context('when you only have 418 tests', function () {
-                it('needs just two more', function () {})
+            context('when you only have 419 tests', function () {
                 it('perfect', function () {})
             })
             

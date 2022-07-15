@@ -1,4 +1,4 @@
-/* const {
+const {
     shouldBehaveLikeERC721,
     shouldBehaveLikeERC721Metadata,
     shouldBehaveLikeERC721Enumerable,
@@ -40,4 +40,4 @@ contract('SoulboundCard', function (accounts) {
     shouldBehaveLikeERC721Metadata('ERC721', bCardName, bCardSymbol, sCardName, sCardSymbol, ...accounts);
     shouldBehaveLikeERC721Enumerable('ERC721', ...accounts);
     shouldBehaveLikeSoulboundCard('SCARD', ...accounts);
-}); */
+});

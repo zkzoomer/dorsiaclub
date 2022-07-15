@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 import "./BusinessCard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
@@ -104,6 +102,7 @@ contract SoulboundCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumer
         require(_isApprovedOrOwner(msg.sender, tokenId), "SCARD: caller is not owner nor approved");
         require(bCard.ownerOf(tokenId) == from, "SCARD: sending card that is not own");
         require(receiver != address(0), "SCARD: sending to zero address");
+        require(receiver != from, "SCARD: sending to owner");
         require(!_blacklistedReceivers[receiver], "SCARD: receiver blacklisted themselves");
         require(!_receivedTokens[receiver].contains(tokenId), "SCARD: receiver was already sent the Soulbound Card");
 

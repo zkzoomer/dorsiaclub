@@ -29,7 +29,7 @@ export const bCardAbi = require('./abis/BusinessCard.json')['abi']
 export const mPlaceAddress = "0x06F3190bcd140b38937191e5572F8ffbbC60B482";
 export const mPlaceAbi = require('./abis/Marketplace.json')['abi'];
 
-export const sCardAddress = "0x333C380ac35C702EA22D431dAbe11B3AB31e56dF";
+export const sCardAddress = "0x2bB46b998013Bc7dc0A96De6E7DC1367f8EfddFf";
 export const sCardAbi = require('./abis/SoulboundCard.json')['abi'];
 
 // Default URI fed to the smart contract

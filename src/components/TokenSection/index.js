@@ -7,6 +7,8 @@ import {
     mPlaceAddress,
     mPlaceAbi,
     mPlaceOracleFee,
+    sCardAddress,
+    sCardAbi,
 } from '../../web3config';
 import AttributesSection from './Attributes';
 import ChangeNameSection from './ChangeName';
@@ -14,6 +16,8 @@ import SwapNameSection from './SwapNames';
 import BuyTokenSection from './BuyToken';
 import CancelListingSection from './CancelListing';
 import CreateListingSection from './CreateListing';
+import SendCopySection from './SendCopy';
+import SendToOwnerSection from './SendToOwner';
 import {
     PageContainer,
     TokenContainer, 
@@ -115,8 +119,8 @@ const TokenPageElements = (props) => {
                     setSectionsList([{ sectionName: "Traits" }, { sectionName: "Modify" }, { sectionName: "Trade" }, { sectionName: "Send" }])
                 } else if (mPlaceAddress.toLowerCase() === _cardOwner.toLowerCase()) {
                     // If the card owner is the marketplace, it may be an `account` listing or `other`
-                    const listing = await mPlaceContract.getLatestMarketItemByTokenId('1')
-                    if (listing[0]['seller'].toLowerCase() === props.account) {
+                    const listing = await mPlaceContract.getLatestMarketItemByTokenId(props.id)
+                    if (listing[0]['seller'].toLowerCase() === props.account.toLowerCase()) {
                         setOwner("marketplaceConnectedAccount")
                     } else if (props.account !== "") {
                         setOwner("marketplaceAddress")
@@ -253,11 +257,11 @@ const TokenPageElements = (props) => {
             section = (<CancelListingSection id={props.id} metadata={tokenMetadata} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage} />)
         }
     } else if (currentSection === 'Send') {
-        section = (
-            <div>
-                SNEED
-            </div>
-        )
+        if (owner === 'account') {
+            section = <SendCopySection id={props.id} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>
+        } else if (owner === 'other') {
+            section = <SendToOwnerSection id={props.id} account={props.account} chainId={props.chainId} provider={props.provider} setErrorMessage={props.setErrorMessage}/>
+        }
     }
 
     const Description = () => {
