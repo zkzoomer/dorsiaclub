@@ -155,7 +155,7 @@ const CreateListingSection = (props) => {
 
     const buttonComponent = props.isApproved || isApproved ? 
         buttonEnabled ?
-            <Button type="button" disabled={false} onClick={handleListingClick}>
+            <Button type="button" disabled={awaitingTx ? true : false} onClick={handleListingClick}>
                 <div>
                     {(awaitingTx) ? <Spinner animation="border" size="sm" /> : "Create Listing"}
                 </div>

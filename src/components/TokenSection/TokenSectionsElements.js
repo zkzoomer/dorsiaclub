@@ -149,6 +149,7 @@ export const ImgWrap = styled.div`
 
 export const ImgDescription = styled.div`   
     padding-top: 20px;
+    padding-bottom: 30px;
     color: white;
     font-size: 1.1rem;
     height: 100%;

@@ -387,7 +387,7 @@ class BuyTokenSection extends React.Component {
         if (buttonEnabled) {
             buttonComponent = 
             <>
-                <EnabledButton type="button" disabled={false} onClick={this.handleClick}>
+                <EnabledButton type="button" disabled={this.state.awaitingTx ? true : false} onClick={this.handleClick}>
                     {(this.state.awaitingTx) ? <Spinner animation="border" size="sm" /> : "Buy  Card" }
                 </EnabledButton>
             </>

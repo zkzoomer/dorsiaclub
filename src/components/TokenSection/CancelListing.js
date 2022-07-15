@@ -113,7 +113,7 @@ const CancelListingSection = (props) => {
     }
 
     const buttonComponent = buttonEnabled ?
-            <CancelButton type="button" disabled={false} onClick={handleClick}>
+            <CancelButton type="button" disabled={awaitingTx ? true : false} onClick={handleClick}>
                 <div>
                     {(awaitingTx) ? <Spinner animation="border" size="sm" /> : "Cancel Listing"}
                 </div>

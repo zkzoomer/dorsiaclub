@@ -92,7 +92,7 @@ const SwapNameSection = (props) => {
     let buttonComponent = null;
     if (buttonEnabled) {
         buttonComponent = 
-            <EnabledButton type="button" disabled={false} onClick={handleClick}>
+            <EnabledButton type="button" disabled={awaitingTx ? true : false} onClick={handleClick}>
                 <div>
                     {(awaitingTx) ? <Spinner animation="border" size="sm" /> : "Swap Business Cards"}
                 </div>

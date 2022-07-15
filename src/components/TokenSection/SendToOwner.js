@@ -164,6 +164,7 @@ const SendToOwnerSection = (props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [ownedCards, setOwnedCards] = useState([]);
     const [receivers, setReceivers] = useState(null);
+    const [owner, setOwner] = useState(null);
 
     const addressRegex = /^0x[a-fA-F0-9]{40}$/
     const bCardContract = new ethers.Contract(bCardAddress, bCardAbi, props.provider);
@@ -186,30 +187,55 @@ const SendToOwnerSection = (props) => {
 
     const handleSendClick = async () => {
         let cardId = fetchCardId(value)
+
         setAwaitingTx(true);
 
+        const receivers = await sCardContract.soulboundCardReceivers(cardId)
+        if (!receivers.includes(ethers.utils.getAddress(owner))) {
+            try {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();    
+                const _contract = new ethers.Contract(sCardAddress, sCardAbi, provider)
+                const sCard = await _contract.connect(signer)
+                await sCard.sendSoulboundCard(props.account, owner, cardId)
+            } catch (err) {
+
+            } finally {
+                setAwaitingTx(false);
+                setValue("Your Business Cards")
+            }
+        } else {
+            props.setErrorMessage(['Invalid recipient', 'Address was already sent this Soulbound Card'])
+            setAwaitingTx(false);
+            setValue("Your Business Cards")
+        }
+    }
+
+    const handleBurnClick = async () => {
+        setAwaitingTx(true);
+        
         try {
-            
-
-
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();    
+            const _contract = new ethers.Contract(sCardAddress, sCardAbi, provider)
+            const sCard = await _contract.connect(signer)
+            await sCard.burnSoulboundCard(props.account, props.id)
         } catch (err) {
 
         } finally {
             setAwaitingTx(false);
         }
-
-
-    }
-
-    const handleBurnClick = async () => {
-
     }
 
     useEffect(() => {
         async function fetchData() {
+            if(!owner) {
+                const _owner = await bCardContract.ownerOf(props.id)
+                setOwner(_owner)
+            }
+
             // Only sets the list of receivers once
             if (!receivers)  {
-                console.log("Props.id: ", props.id)
                 const _receivers = await sCardContract.soulboundCardReceivers(props.id)
                 setReceivers(_receivers)
             }
@@ -258,7 +284,7 @@ const SendToOwnerSection = (props) => {
     })
 
     const buttonComponent = sendButtonEnabled ? 
-        <SendButton type="button" disabled={false} onClick={handleSendClick}>
+        <SendButton type="button" disabled={awaitingTx ? true : false} onClick={handleSendClick}>
             <div>
                 {(awaitingTx) ? <Spinner animation="border" size="sm" /> : "Send Soulbound Card"}
             </div>
@@ -280,8 +306,10 @@ const SendToOwnerSection = (props) => {
                 You received this as a Soulbound Card
             </BurnText>
             <ButtonWrapper>
-                <BurnButton type="button" disabled={false} onClick={handleBurnClick}>
-                    Burn received card
+                <BurnButton type="button" disabled={awaitingTx ? true : false} onClick={handleBurnClick}>
+                    <div>
+                        {(awaitingTx) ? <Spinner animation="border" size="sm" /> : "Burn Received Card"}
+                    </div>
                 </BurnButton>
             </ButtonWrapper>
         </>

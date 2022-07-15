@@ -48,8 +48,7 @@ const Gallery = (props) => {
 	// Increases the number of biz cards to load on the page
 	window.onscroll = function (e) {
 		if (
-			window.innerHeight + document.documentElement.scrollTop ===
-			document.documentElement.offsetHeight
+			(window.innerHeight + window.scrollY) >= document.body.offsetHeight - 90  // Footer is 80 px high
 			&&
 			!isLoading
 		) {
@@ -307,6 +306,8 @@ const Gallery = (props) => {
 			if(!props.account && ownedSwitchOn) { 
 				setOwnedSwitch(!ownedSwitchOn)
 			}
+
+			setIsLoading(false);
 		}
 		fetchData()
 	// eslint-disable-next-line

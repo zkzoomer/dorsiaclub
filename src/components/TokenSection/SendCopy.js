@@ -165,7 +165,7 @@ const SendCopySection = (props) => {
     }
 
     const buttonComponent = (sendButtonEnabled && addressRegex.test(recipient)) ? 
-        <SendButton type="button" disabled={false} onClick={handleSendClick}>
+        <SendButton type="button" disabled={awaitingTx ? true : false} onClick={handleSendClick}>
             <div>
                 {(awaitingTx) ? <Spinner animation="border" size="sm" /> : "Send Soulbound Card"}
             </div>
