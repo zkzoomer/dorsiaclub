@@ -191,12 +191,12 @@ contract SoulboundCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumer
     }
 
     /**
-     * @dev Blacklists the specified address from receiving any additional sCards
+     * @dev Enables or disables the specified address from receiving any additional sCards
      * Caller must be the specified address or an approved operator
      */
-    function disableSoulboundCardsForAddress(address toDisable) external {
-        require(msg.sender == toDisable || isApprovedForAll(toDisable, msg.sender), "SCARD: caller is not owner nor approved for all");
-        _blacklistedReceivers[toDisable] = true;
+    function setBlacklistForAddress(address receiver, bool blacklist) external {
+        require(msg.sender == receiver || isApprovedForAll(receiver, msg.sender), "SCARD: caller is not owner nor approved for all");
+        _blacklistedReceivers[receiver] = blacklist;
     }
 
     /**

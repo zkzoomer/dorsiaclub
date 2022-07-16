@@ -69,7 +69,7 @@ function App() {
         <Route path="/" element={<Home />} exact="true"/>
         <Route path="/gallery" element={<GalleryPage account={account} chainId={chainId} provider={provider} setErrorMessage={setErrorMessage}/>} exact="true"/>
         <Route path="/mint" element={<MintPage account={account} chainId={chainId} provider={provider} setErrorMessage={setErrorMessage}/>} exact="true"/> 
-        <Route path="/office" element={<OfficePage />} exact="true"/>
+        <Route path="/office" element={<OfficePage account={account} chainId={chainId} provider={provider} setErrorMessage={setErrorMessage}/>} exact="true"/>
         {
           // Total of a thousand tokens
           tokenList.map(

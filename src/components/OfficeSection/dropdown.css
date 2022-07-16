@@ -1,0 +1,31 @@
+.btn-dark {
+    width: 70%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    white-space: nowrap;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Royal-Script', serif;
+    background-color: var(--dark-background) !important;
+    border-color: var(--dark-background) !important;
+  }
+  
+  .dropdown-menu {
+    min-width: 70%;
+    width: 300px;
+    max-height: 200px;
+    overflow-x: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: 'Royal-Script', serif;
+    background-color: var(--main-text) !important;
+    color: var(--dark-background) !important;
+  }
+  
+  .dropdown-item {
+    font-family: 'Royal-Script', serif;
+  }
+  
+  
+  /* https://react-bootstrap.github.io/getting-started/theming/ */

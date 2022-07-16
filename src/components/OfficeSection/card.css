@@ -1,0 +1,42 @@
+.card {
+    width: 18rem;
+    min-height: 21rem;
+    box-shadow: 5px 5px 3px rgba(0,0,0,0.2);
+    transition: all 0.4s ease-in-out !important;
+}
+
+.bg-custom {
+    background-color: var(--dark-background) !important;
+}
+
+.text-custom {
+    color: var(--main-text);
+}
+
+.card:hover {
+    transform: scale(1.02);
+    transition: all 0.4s ease-in-out !important;
+    cursor: pointer;
+}
+
+.card-link {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%; width: 100%;
+}
+
+.card-title {
+    text-align: center;
+    font-size: 1.4rem !important;
+}
+
+.card-text {
+    text-align: center;
+}
+
+@media(max-width: 700px) {
+    .card {
+        width: 90%;
+        margin: auto;
+    }
+}

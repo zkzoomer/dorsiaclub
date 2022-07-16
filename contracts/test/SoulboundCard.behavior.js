@@ -1,6 +1,7 @@
 const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const { BigNumber } = require('ethers');
+const { default: context } = require('react-bootstrap/esm/AccordionContext');
 const { ZERO_ADDRESS } = constants;
 
 const { shouldSupportInterfaces } = require('./SupportsInterface.behavior');
@@ -355,7 +356,7 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
 
             context('when the receiver blacklisted themselves', function () {
                 it('reverts', async function () {
-                    await this.sCard.disableSoulboundCardsForAddress(receiver, { from: receiver })
+                    await this.sCard.setBlacklistForAddress(receiver, true, { from: receiver })
                     await expectRevert(
                         this.sCard.sendSoulboundCard(owner, receiver, 1, { from: owner })
                         ,
@@ -411,38 +412,44 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
             })
         })
 
-        describe('disableSoulboundCardsForAddress', function () {
+        describe('setBlacklistForAddress', function () {
             context('when caller is not owner nor approved for all', function () {
                 it('reverts', async function () {
                     await expectRevert(
-                        this.sCard.disableSoulboundCardsForAddress(owner, { from: newOwner })
+                        this.sCard.setBlacklistForAddress(owner, true, { from: newOwner })
                         ,
                         "SCARD: caller is not owner nor approved for all"
                     )
                     // But this will clear
                     await this.bCard.setApprovalForAll(newOwner, true, { from: owner })
-                    this.sCard.disableSoulboundCardsForAddress(owner, { from: newOwner })
+                    this.sCard.setBlacklistForAddress(owner, true, { from: newOwner })
                 })
             })
 
             context('with a successful call', function() {
                 beforeEach(async function () {
-                    await this.sCard.disableSoulboundCardsForAddress(receiver, { from: receiver })    
+                    await this.sCard.setBlacklistForAddress(receiver, true, { from: receiver })    
                 })
                 
-                it('blacklists the specified address', async function () {
+                it('can blacklist and revert a blacklist for the specified address', async function () {
                     await expectRevert(
                         this.sCard.sendSoulboundCard(owner, receiver, 1, { from: owner })
                         ,
                         "SCARD: receiver blacklisted themselves"
                     )
+                    await this.sCard.setBlacklistForAddress(receiver, false, { from: receiver })  
+                    // tx clears
+                    await this.sCard.sendSoulboundCard(owner, receiver, 1, { from: owner })
                 })
 
-                it('stores the address as blacklisted', async function () {
+                it('stores the address as blacklisted or not blacklisted', async function () {
                     expect(await this.sCard.isBlacklisted(receiver)).to.be.true;
+                    await this.sCard.setBlacklistForAddress(receiver, false, { from: receiver })  
+                    expect(await this.sCard.isBlacklisted(receiver)).to.be.false;
                 })
             })
         })
+
     })
     
     context('with sent Soulbound Cards', function () {
@@ -898,13 +905,17 @@ function shouldBehaveLikeSoulboundCard (errorPrefix, owner, newOwner, receiver, 
                     expectEvent(tx, 'Transfer', { from: newOwner, to: ZERO_ADDRESS, tokenId: '1' }) */
                 })
             })
-
-            context('when you only have 419 tests', function () {
-                it('perfect', function () {})
-            })
             
         })
 
+    })
+
+    context('when you only have 419 tests', function () {
+        describe('it might need just one more', function () {
+            it("now it's perfect", function () {
+                
+            })
+        })
     })
 
 }
