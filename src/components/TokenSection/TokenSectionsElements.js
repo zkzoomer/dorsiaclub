@@ -9,6 +9,7 @@ export const PageContainer = styled.div`
 export const TokenContainer = styled.div`
     height: 100%;
     background: var(--light-background);
+    padding-bottom: 50px;
 
     @media screen and (max-width: 768px) {
         overflow-x: hidden;
@@ -142,6 +143,10 @@ export const Column2 = styled.div`
 `
 
 export const ImgWrap = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     position: relative;
     max-width: 1000px;
     height: 100%;
@@ -149,7 +154,6 @@ export const ImgWrap = styled.div`
 
 export const ImgDescription = styled.div`   
     padding-top: 20px;
-    padding-bottom: 30px;
     color: white;
     font-size: 1.1rem;
     height: 100%;

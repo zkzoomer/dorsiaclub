@@ -26,7 +26,7 @@ const Footer = () => {
                             <SocialIconLink href='https://t.me/DorsiaClub' target='_blank' aria_label='Telegram'>
                                 <FaTelegramPlane />
                             </SocialIconLink>
-                            <SocialIconLink href='https://twitter.com/DorsiaClubNFT' target='_blank' aria_label='Twitter'>
+                            <SocialIconLink href='https://twitter.com/0xdeenz' target='_blank' aria_label='Twitter'>
                                 <FaTwitter />
                             </SocialIconLink>
                         </SocialIcons>
