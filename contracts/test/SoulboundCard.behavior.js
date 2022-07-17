@@ -1,7 +1,6 @@
 const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const { BigNumber } = require('ethers');
-const { default: context } = require('react-bootstrap/esm/AccordionContext');
 const { ZERO_ADDRESS } = constants;
 
 const { shouldSupportInterfaces } = require('./SupportsInterface.behavior');

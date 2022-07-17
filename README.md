@@ -50,9 +50,9 @@ You can go ahead and mint your own Business Card, free of charge:
 - Use the demo version deployed in the Mumbai testnet: https://dorsiaclub-testnet.netlify.app/
 
 #### Polygonscan links:
-- Business Card verified smart contract: [0x798E1eFBFFB2d6315d1Ab62Cd80C1c56A7C5E70d](https://mumbai.polygonscan.com/address/0x384c8072DA488698Df87c02cDf04499262D4697f#code)
+- Business Card verified smart contract: [0x384c8072DA488698Df87c02cDf04499262D4697f](https://mumbai.polygonscan.com/address/0x384c8072DA488698Df87c02cDf04499262D4697f#code)
 - Marketplace verified smart contract: [0x06F3190bcd140b38937191e5572F8ffbbC60B482](https://mumbai.polygonscan.com/address/0x06F3190bcd140b38937191e5572F8ffbbC60B482#code)
-- Soulbound Card verified smart contract: [0x2bB46b998013Bc7dc0A96De6E7DC1367f8EfddFf](https://mumbai.polygonscan.com/address/0x2bB46b998013Bc7dc0A96De6E7DC1367f8EfddFf#code)
+- Soulbound Card verified smart contract: [0xb3Ce1B1D473ABfFf2d65729521B4b3b03eb64A83](https://mumbai.polygonscan.com/address/0xb3Ce1B1D473ABfFf2d65729521B4b3b03eb64A83#code)
 - Oracle address: [0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8](https://mumbai.polygonscan.com/address/0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8)
 
 #### Reach out on Twitter: https://twitter.com/0xdeenz
