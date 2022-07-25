@@ -29,7 +29,7 @@ export const items = [
     },
     {
         name: "What is the price of minting?",
-        content: "Minting your new Business Card costs 0.1 MATIC, while updating Business Cards that you own costs 0.05 MATIC"
+        content: "Minting your new Business Card costs 10000 BTTC, while updating Business Cards that you own costs 5000 BTTC"
     },
     {
         name: "Which wallets should I use?",
