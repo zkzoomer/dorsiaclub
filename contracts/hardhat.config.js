@@ -31,6 +31,12 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
       accounts: {
         mnemonic: mnemonic
       }
+    },
+    bittorrent_testnet: {
+      url: 'https://pre-rpc.bt.io/',
+      accounts: {
+        mnemonic: mnemonic
+      }
     }
   },
   gasReporter: {

@@ -44,9 +44,9 @@ contract Marketplace is ReentrancyGuard, Ownable {
     // Business Card smart contract
     IBusinessCard immutable bCard;
     // Oracle fee, fixed as it is the same one used for BusinessCard
-    uint256 public oracleFee = 0.015 ether;
+    uint256 public oracleFee = 1500 ether;
     // Minimum listing price, equal to the update price in bCard
-    uint256 public minimumPrice = 0.05 ether;
+    uint256 public minimumPrice = 5000 ether;
 
     bool public saleStarted;
 

@@ -176,12 +176,11 @@ class ListeningOracle():
             else:
                 new_properties[dict_key] = str(event_properties[dict_key])  # The discord account ID will be made string"""
 
-        # Use this name, position to generate a new card and get the ipfs hash
-        newcardwhatdoyouthink = Card(tokenId, name, position, genes, new_properties)
-        tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
-
-        # Calls the Card contract updateCallback function to finalize the update of this tokenURI
         try:
+            # Use this name, position to generate a new card and get the ipfs hash
+            newcardwhatdoyouthink = Card(tokenId, name, position, genes, new_properties)
+            tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
+
             callback = self.contract.functions.updateCallback(
                 tokenId,
                 tokenURI[2:]
@@ -191,12 +190,9 @@ class ListeningOracle():
                 'nonce': self.nonce,
                 'gasPrice': self.web3.eth.gas_price
             })
-        except:
-            pass
 
-        self.nonce += 1
+            self.nonce += 1
 
-        try:
             signed_tx = self.web3.eth.account.sign_transaction(callback, self.pkey)
             # Send transaction
             tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -205,7 +201,7 @@ class ListeningOracle():
             # Inform admin of updated card
             req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                 botToken=self.bot_token, chatID=self.channel_id,
-                text='updateCallback for token {}'.format(tokenId)
+                text='BTTC: updateCallback for token {}'.format(tokenId)
             )
             requests.post(req)
         except:
@@ -213,7 +209,7 @@ class ListeningOracle():
             # TODO: have a vairable to not update block if failed tx
             req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                 botToken=self.bot_token, chatID=self.channel_id,
-                text='updateCallback for token {}  failed, restarting'.format(tokenId)
+                text='BTTC: updateCallback for token {}  failed, restarting'.format(tokenId)
             )
             requests.post(req)
             exit()
@@ -257,16 +253,14 @@ class ListeningOracle():
         current_position_2 = current_metadata_2['card_position']
         current_properties_2 = current_metadata_2['card_properties']
 
-        # Generate card one keeping genes but using card 2 name/properties
-        newcardwhatdoyouthink_1 = Card(tokenId1, current_name_2, current_position_2, genes1, current_properties_2)
-        tokenURI_1, image_path_1, thumbnail_path_1 = newcardwhatdoyouthink_1.get_tokenURI_hash()
-
-        newcardwhatdoyouthink_2 = Card(tokenId2, current_name_1, current_position_1, genes2, current_properties_1)
-        tokenURI_2, image_path_2, thumbnail_path_2 = newcardwhatdoyouthink_2.get_tokenURI_hash()
-
-        # swapCallback transaction
-        # Calls the Card contract callback function to finalize the update of this tokenURI
         try:
+            # Generate card one keeping genes but using card 2 name/properties
+            newcardwhatdoyouthink_1 = Card(tokenId1, current_name_2, current_position_2, genes1, current_properties_2)
+            tokenURI_1, image_path_1, thumbnail_path_1 = newcardwhatdoyouthink_1.get_tokenURI_hash()
+
+            newcardwhatdoyouthink_2 = Card(tokenId2, current_name_1, current_position_1, genes2, current_properties_1)
+            tokenURI_2, image_path_2, thumbnail_path_2 = newcardwhatdoyouthink_2.get_tokenURI_hash()
+
             callback = self.contract.functions.swapCallback(
                 tokenId1,
                 tokenId2,
@@ -278,12 +272,9 @@ class ListeningOracle():
                 'nonce': self.nonce,
                 'gasPrice': self.web3.eth.gas_price
             })
-        except:
-            pass
 
-        self.nonce += 1
+            self.nonce += 1
 
-        try:
             signed_tx = self.web3.eth.account.sign_transaction(callback, self.pkey)
             # Send transaction
             tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -398,7 +389,7 @@ class ListeningOracle():
                 # Send a request to post the message
                 req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                     botToken=self.bot_token, chatID=self.channel_id,
-                    text='Oracle running smoothly, current balance: {}'.format(balance)
+                    text='BTTC: Oracle running smoothly, current balance: {}'.format(balance)
                 )
                 requests.post(req)
                 # Update the last message time
@@ -470,13 +461,22 @@ if __name__ == '__main__':
             f.close()
         rpc = "wss://delicate-bold-night.matic-testnet.discover.quiknode.pro/{}/".format(key)
 
-    # MATIC testnet
+    """# MATIC testnet
     cardContract = {
         "addy": '0x384c8072DA488698Df87c02cDf04499262D4697f',
         "provider": rpc,
         "kind": "WS"
     }
     start_block_file = "./doc/start_block.txt"
+    """
+
+    # BTTC testnet
+    cardContract = {
+        "addy": '0xac2ef62E283A61D05A1f0a00CF9C8E6d74Ef43ca',
+        "provider": 'https://pre-rpc.bt.io/',
+        "kind": 'HTTP'
+    }
+    start_block_file = "./doc/start_block_bttc.txt"
 
     lo = ListeningOracle(processingIds, cardContract, start_block_file, provider)
     asyncio.run(lo.run())

@@ -27,17 +27,20 @@ import {
 import { Spinner } from 'react-bootstrap';
 
 const Office = (props) => {
-	const [switchOn, setSwitch] = useState(true);
+	const [switchOn, setSwitch] = useState(1);
 	const [page, setPage] = useState(1);
-	const [totalCards, setTotalCards] = useState([]);  // All the cards that can be shown
+	const [totalCards, setTotalCards] = useState([]);  // All the cards that correspond to a given addres
 	const [loadedCards, setLoadedCards] = useState([]);  // Cards that have been loaded
 	const [isLoading, setIsLoading] = useState(false);
 	const [toSearch, setToSearch] = useState(null);
 
+	const [isBlacklisted, setIsBlacklisted] = useState(null);
+	const [awaitingTx, setAwaitingTx] = useState(false);
+
 	// Variable changes to keep track of
 	const prevAccount = usePrevious(props.account);  // Change in account
 	const prevPage = usePrevious(page);  // Change in page
-	const prevOwnedSwitch = usePrevious(switchOn);  // Change in switch
+	const prevSwitch = usePrevious(switchOn);  // Change in switch
 	const prevSearch = usePrevious(toSearch);
 
 	// Smart contracts being used inside the office page
@@ -63,21 +66,19 @@ const Office = (props) => {
 		}
 	}; 
 
-	const OwnedSwitch = () => {
-		return(
-			<Form>
-				<Form.Check 
-					disabled={props.account ? false : true}
-					type="switch"
-					id="switcherino"
-					label=""
-					onChange={() => setSwitch(!switchOn)}
-					checked={switchOn}
-				/>
-			</Form>
-		)
-	}
-
+	const ownedSwitch = (
+		<Form>
+			<Form.Check 
+				disabled={props.account ? false : true}
+				type="switch"
+				id="switcherino"
+				label=""
+				onChange={() => setSwitch(!switchOn)}
+				checked={switchOn}
+			/>
+		</Form>
+	)
+	
 	const filterCards = async (filter, _cards, bCardContract) => {
 
 		const checkCardData = async (data, filter, specialFilter) => {
@@ -157,103 +158,208 @@ const Office = (props) => {
 	}
 
 	useEffect(() => {
+		let mounted = true
+
 		async function fetchData() {
-			
+			// Change in account, fully resets Gallery page to loading and showing all Business Cards
+			if (props.account !== prevAccount && props.account) {  // Only if there was a previous account
+				setIsLoading(true);
+				setSwitch(true);
+				let receivedCards = []
+				const _receivedCards = await sCardContract.receivedSoulboundCards(props.account);
+				_receivedCards.forEach((v) => receivedCards.push(parseInt(v)))
+				const _isBlacklisted = await sCardContract.isBlacklisted(props.account)
+				setIsBlacklisted(_isBlacklisted);
+				setTotalCards(receivedCards.reverse());
+				setLoadedCards([])
+				setPage(1)
+			}
+
+			if (!props.account) {
+				setIsBlacklisted(null);
+			}
+
+			// Adds 12 more cards to the list of already loaded ones
+			const addLoadedCards = async (toLoad) => {
+				setIsLoading(true);
+
+				const lastLoadedCard = loadedCards.length;
+				// On final go will add all the remaining cards
+				if (lastLoadedCard + toLoad > totalCards.length) {
+					toLoad = totalCards.length - lastLoadedCard
+				}
+				if (toLoad <= 0) { // Exit if there is nothing to update
+					setIsLoading(false);
+					return 
+				}  
+
+				const _newLoadedCards = [];
+				for (var i = lastLoadedCard; i < lastLoadedCard + toLoad; i++) {
+					_newLoadedCards.push(
+						<OfficeCard 
+							id={totalCards[i]} 
+							contract={bCardContract} 
+							key={totalCards[i]} 
+						/>
+					)
+				}
+
+				// Add to the loaded cards
+				setLoadedCards((prev) => [...prev, ..._newLoadedCards])
+				setIsLoading(false);
+			}
+
+
+			if (page !== prevPage && page > 1) {  // Load more items on the page after first go
+				setIsLoading(true);
+				await addLoadedCards(4);  // Adds 4 more loaded cards
+			} 
+
+
+			// Change in switches or change in search items
+			if ((switchOn !== prevSwitch || toSearch !== prevSearch) && props.account) {
+
+				if( switchOn ) {  // Only user received cards
+
+					setIsLoading(true);
+					setSwitch(true);
+					var receivedCards = []
+					const _receivedCards = await sCardContract.receivedSoulboundCards(props.account);
+					_receivedCards.forEach((v) => receivedCards.push(parseInt(v)))
+
+					if (toSearch) {
+						receivedCards = await filterCards(toSearch, receivedCards, bCardContract);
+					}
+					
+					setTotalCards(receivedCards);
+					setLoadedCards([])
+					setPage(1)
+
+
+				} else if ( !switchOn ) {  // User received cards
+
+					setIsLoading(true);
+					// Need to get the total balance first
+					let _accountBalance = await bCardContract.balanceOf(props.account)
+					// Then iterate to get each index
+					_accountBalance = parseInt(_accountBalance)
+					var sentCards = []
+					for (let i=0; i < _accountBalance; i++) {
+						let _card = await bCardContract.tokenOfOwnerByIndex(props.account, i);
+						let _cardRecipients = await sCardContract.soulboundCardReceivers(parseInt(_card))
+						if (_cardRecipients.length) {
+							sentCards.push(parseInt(_card))
+						}
+					}
+
+					if(toSearch) {
+						sentCards = await filterCards(toSearch, sentCards, bCardContract)
+					}
+
+					setTotalCards(sentCards.reverse());
+					setLoadedCards([]);
+					setPage(1)
+
+				} 
+
+			}
+
+			// There are no loaded cards
+			if (loadedCards.length === 0) {
+				await addLoadedCards(12);  // Adds 12 more loaded cards
+			}
+
+			// Display all biz cards if account disconnects
+			if(!props.account && switchOn) { 
+				setSwitch(!switchOn)
+			}
+
+			setIsLoading(false);
 		}
-		fetchData()
+
+		if (mounted) {
+			fetchData()
+		}
+
+		return () => mounted = false;
+		
 	// eslint-disable-next-line
   	}, [switchOn, props.account, props.provider, page, loadedCards, toSearch]); 
 
-	const BlacklistButtonComponent = memo((props) => {
-		const [isBlacklisted, setIsBlacklisted] = useState(null);
-		const [awaitingTx, setAwaitingTx] = useState(false);
+	const handleBlacklisting = async (blacklist) => {
+		setAwaitingTx(true);
+		try {
+			const provider = new ethers.providers.Web3Provider(window.ethereum);
+			const signer = provider.getSigner();    
+			const _contract = new ethers.Contract(sCardAddress, sCardAbi, provider)
+			const sCard = await _contract.connect(signer)
 
-		useEffect(() => {
-			async function fetchData() {
-				const _isBlacklisted = await sCardContract.isBlacklisted(props.account)
-				setIsBlacklisted(_isBlacklisted);
-			}
-			if (props.account) {
-				fetchData()
-			}
-		}, [props.account])
+			await sCard.setBlacklistForAddress(props.account, blacklist)
+			setIsBlacklisted(blacklist);
+		} catch(err) {
 
-		const handleBlacklisting = async (blacklist) => {
-			setAwaitingTx(true);
-			try {
-				const provider = new ethers.providers.Web3Provider(window.ethereum);
-				const signer = provider.getSigner();    
-				const _contract = new ethers.Contract(sCardAddress, sCardAbi, provider)
-				const sCard = await _contract.connect(signer)
-
-				/* await sCard.setBlacklistForAddress(props.account, blacklist) */
-				setIsBlacklisted(blacklist);
-			} catch(err) {
-
-			} finally {
-				setAwaitingTx(false);
-			}
+		} finally {
+			setAwaitingTx(false);
 		}
+	}
 
-		if (isBlacklisted === false) {
-			return(
-				<BlacklistButton 
-					type="button" 
-					disabled={(awaitingTx || props.chainId !== chainId) ? true : false} 
-					onClick={() => handleBlacklisting(true)}
-				>
-					<BlacklistButtonText>
-						{awaitingTx ? <Spinner animation="border" size="sm" /> : 'GET BLACKLISTED' }
-					</BlacklistButtonText>
-				</BlacklistButton>
-			)
-		} else if (isBlacklisted === true) {
-			return(
-				<BlacklistButton
-					type="button" 
-					disabled={(awaitingTx || props.chainId !== chainId) ? true : false}
-					onClick={() => handleBlacklisting(false)}
-				>
-					<BlacklistButtonText>
-						{awaitingTx ? <Spinner animation="border" size="sm" /> : 'ACCEPT CARDS' }
-					</BlacklistButtonText>
-				</BlacklistButton>
-			)
-		} else {
-			return(
-				<BlacklistButton
-					type="button" 
-					disabled={true}
-				>
-					<BlacklistButtonText>
-						? ? ?
-					</BlacklistButtonText>
-				</BlacklistButton>
-			)
-		}
-	})
-
+	let blacklistComponent;
+	if (isBlacklisted === false) {
+		blacklistComponent = (
+			<BlacklistButton 
+				type="button" 
+				disabled={(awaitingTx || props.chainId !== chainId) ? true : false} 
+				onClick={() => handleBlacklisting(true)}
+			>
+				<BlacklistButtonText>
+					{awaitingTx ? <Spinner animation="border" size="sm" /> : 'GET BLACKLISTED' }
+				</BlacklistButtonText>
+			</BlacklistButton>
+		)
+	} else if (isBlacklisted === true) {
+		blacklistComponent = (
+			<BlacklistButton
+				type="button" 
+				disabled={(awaitingTx || props.chainId !== chainId) ? true : false}
+				onClick={() => handleBlacklisting(false)}
+			>
+				<BlacklistButtonText>
+					{awaitingTx ? <Spinner animation="border" size="sm" /> : 'ACCEPT CARDS' }
+				</BlacklistButtonText>
+			</BlacklistButton>
+		)
+	} else {
+		blacklistComponent = (
+			<BlacklistButton
+				type="button" 
+				disabled={true}
+			>
+				<BlacklistButtonText>
+					? ? ?
+				</BlacklistButtonText>
+			</BlacklistButton>
+		)
+	}
 	
 	return (
 		<PageContainer>
 			<HeadContainer>
-				<BlacklistButtonComponent account={props.account} chainId={props.chainId} />
+				{blacklistComponent}
 				<SwitchRow>
 					<SwitchText>
 						Sent
 					</SwitchText>
-					<OwnedSwitch />
+					{ownedSwitch}
 					<SwitchText>
 						Received
 					</SwitchText>
-					
 				</SwitchRow>
-				{'(select and burn)'}
 				<SearchItems setToSearch={setToSearch}/>
 				<DividerWrapper>
 					<DividerLine />
 				</DividerWrapper>
 			</HeadContainer>
+			{ !props.account ? 'You need to connect your account to see the Soulbound Cards you received' : null }
 			<OfficeContainer>
 				{ isLoading ? null : loadedCards }
 			</OfficeContainer>

@@ -46,13 +46,13 @@ The oracle as it stands is of course a centralized entity, currently being run o
 ## Links and resources
 
 You can go ahead and mint your own Business Card, free of charge:
-- First, get some testnet MATIC over at: https://faucet.polygon.technology/
-- Use the demo version deployed in the Mumbai testnet: https://dorsiaclub-testnet.netlify.app/
+- First, get some testnet BTTC over at: https://faucet.bittorrentchain.io/#/
+- Use the demo version deployed in the BTTC testnet: https://dorsiaclub-testnet.netlify.app/
 
-#### Polygonscan links:
-- Business Card verified smart contract: [0x384c8072DA488698Df87c02cDf04499262D4697f](https://mumbai.polygonscan.com/address/0x384c8072DA488698Df87c02cDf04499262D4697f#code)
-- Marketplace verified smart contract: [0x06F3190bcd140b38937191e5572F8ffbbC60B482](https://mumbai.polygonscan.com/address/0x06F3190bcd140b38937191e5572F8ffbbC60B482#code)
-- Soulbound Card verified smart contract: [0xb3Ce1B1D473ABfFf2d65729521B4b3b03eb64A83](https://mumbai.polygonscan.com/address/0xb3Ce1B1D473ABfFf2d65729521B4b3b03eb64A83#code)
-- Oracle address: [0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8](https://mumbai.polygonscan.com/address/0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8)
+#### BTTCScan links:
+- Business Card verified smart contract: [0xac2ef62E283A61D05A1f0a00CF9C8E6d74Ef43ca](https://testnet.bttcscan.com/address/0xac2ef62E283A61D05A1f0a00CF9C8E6d74Ef43ca#code)
+- Marketplace verified smart contract: [0x952F56CBAB21Fcef245ab854B900638b05668EB9](https://testnet.bttcscan.com/address/0x952F56CBAB21Fcef245ab854B900638b05668EB9#code)
+- Soulbound Card verified smart contract: [0x8568c662c4c00F095b2D86f2179A86D823A4379b](https://testnet.bttcscan.com/address/0x8568c662c4c00F095b2D86f2179A86D823A4379b#code)
+- Oracle address: [0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8](https://testnet.bttcscan.com/address/0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8)
 
 #### Reach out on Twitter: https://twitter.com/0xdeenz

@@ -103,11 +103,11 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     ISoulboundCard private sCard;
 
     // Token mint price
-    uint256 public mintPrice = 0.1 ether;
+    uint256 public mintPrice = 10000 ether;
     // Token URI update / swap price
-    uint256 public updatePrice = 0.05 ether;
+    uint256 public updatePrice = 5000 ether;
     // Oracle update transaction gas price
-    uint256 public oraclePrice = 0.015 ether;
+    uint256 public oraclePrice = 1500 ether;
 
     // Oracle related events
     event UpdateRequest(uint256 tokenId, uint256 genes, string name, CardProperties cardProperties);
