@@ -94,7 +94,7 @@ const TokenPageElements = (props) => {
                         data.card_properties.discord_account = data.card_properties.discord_account === "0" ? "" : data.card_properties.discord_account
                         _cardOwner = await bCardContract.ownerOf(props.id);
                         if (props.account === _cardOwner.toLowerCase()) {
-                            isApproved = await bCardContract.isApprovedForAll(props.account, mPlaceContract.address)
+                            isApproved = await bCardContract.isApprovedForAll(props.account.toString(), mPlaceContract.address.toString())
                         } else if (mPlaceAddress.toLowerCase() === _cardOwner.toLowerCase()) {
                             const listing = await mPlaceContract.getLatestMarketItemByTokenId(props.id)
                             price = ethers.utils.formatEther(listing[0]['price'])
@@ -141,7 +141,7 @@ const TokenPageElements = (props) => {
                     )
                 }
             } catch (err) {
-                
+                console.log('erroring')
             }
 
             // Change of accounts, revert to attribute page if not already there

@@ -1,5 +1,5 @@
 import json
-import pinatapy
+import w3storage
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
@@ -38,24 +38,24 @@ class Card():
 
         self.genedict = {
             'Setting': {
-                8: 'Kashmir Silk',
-                16: 'VHS Static',
-                17: 'Resin River',
+                3: 'Kashmir Silk',
+                9: 'VHS Static',
+                15: 'Resin River',
                 25: 'Connemara Marble',
                 35: 'Calacatta Marble',
-                45: 'Benjamins',
-                55: 'Dissection',
-                59: 'Old Growth',
+                39: 'Benjamins',
+                43: 'Dissection',
+                53: 'Old Growth',
                 63: 'Office Table',
-                68: 'Redwood Counter',
-                70: 'Central Park',
-                77: 'Dark Alley',
-                87: 'Dorsia Club',
-                92: 'Great Outdoors',
+                73: 'Redwood Counter',
+                79: 'Central Park',
+                85: 'Dark Alley',
+                89: 'Dorsia Club',
+                95: 'Great Outdoors',
                 99: 'Self Defense',
             },
             'Paper': {
-                8: 'Imperial Print',
+                5: 'Imperial Print',
                 10: 'Unpresentable',
                 18: 'Leather Marked',
                 26: 'Recycled Note',
@@ -160,15 +160,13 @@ class Card():
         # Card, program will be adding layers until completion -- initializing variable
         self.card = None
 
-        # Initializing pinata API
-        with open('./doc/PINATA_API.json') as f:
+        # Initializing web3storage api
+        with open('../doc/WEB3STORAGE.json') as f:
             data = json.load(f)
-            pinata_api_key = data['PINATA_API_KEY']
-            pinata_secret_api_key = data['PINATA_SECRET_API_KEY']
-        self.pinata = pinatapy.PinataPy(pinata_api_key, pinata_secret_api_key)
-        # Base URI is hosted on chain
-        # TODO: change accordingly
-        self.ipfs_gateway = 'https://dorsiaclub.mypinata.cloud/ipfs/'
+            token = data['API_TOKEN']
+            f.close()
+
+        self.w3 = w3storage.API(token=token)
 
     def _get_attributes(self, genes):
         """Relates the gene number to the corresponding attributes
@@ -258,10 +256,10 @@ class Card():
         """
 
         # Background gets opened first and assigned to the card object, other layers get added on top
-        self.card = Image.open('./assets/Setting/{}.png'.format(self._attributes['Setting']))
+        self.card = Image.open('../assets/Setting/{}.png'.format(self._attributes['Setting']))
         # Paper and color have been procedurally generated before hand and stored for all possible combinations
         paper_color = Image.open(
-            './assets/Paper/{}-{}.png'.format(self._attributes['Paper'], self._attributes['Coloring']))
+            '../assets/Paper/{}-{}.png'.format(self._attributes['Paper'], self._attributes['Coloring']))
         # Adding the paper and color layers
         self.card.paste(paper_color, (0, 0), paper_color)
         ### Base is now generated!
@@ -282,7 +280,7 @@ class Card():
             'location': np.array((1287, 1202.7))
         }
         # Text sizes for each of the text bits
-        with open('./doc/sizes.json') as f:
+        with open('../doc/sizes.json') as f:
             data = json.load(f)
             sizes = data[self._attributes['Font']]
 
@@ -303,7 +301,7 @@ class Card():
         }
 
         # Getting path for the font to use, gets loaded again every time as there is a need for a changing size
-        fontpath = './assets/Font/{}.otf'.format(self._attributes['Font'])
+        fontpath = '../assets/Font/{}.otf'.format(self._attributes['Font'])
         # Getting size of the image
         imgsize = self.card.size
 
@@ -329,6 +327,7 @@ class Card():
                 coordinates: (float, float), placement of the center of the text block
             """
             # Defining base parameters
+            print(fontpath)
             font = ImageFont.truetype(fontpath, font_size)
             card_draw = ImageDraw.Draw(self.card)
             size = np.array(card_draw.textsize(text, font=font, features=features, stroke_width=1))
@@ -395,20 +394,20 @@ class Card():
         temp = self.card
         if self._attributes['Special lettering'] == 'Gold lettering':
             # Opening gold texture and laying this image over it
-            self.card = Image.open('./assets/Special/Gold texture.png')
+            self.card = Image.open('../assets/Special/Gold texture.png')
             self.card.paste(temp, (0, 0), temp)
         elif self._attributes['Special lettering'] == 'Silver lettering':
             # Opening silver texture and laying this image over it
-            self.card = Image.open('./assets/Special/Silver texture.png')
+            self.card = Image.open('../assets/Special/Silver texture.png')
             self.card.paste(temp, (0, 0), temp)
         else:
             # Opening black texture and laying this image over it
-            self.card = Image.open('./assets/Special/Black texture.png')
+            self.card = Image.open('../assets/Special/Black texture.png')
             self.card.paste(temp, (0, 0), temp)
 
     def _add_watermark(self):
         """Adds the watermark to the underlying Business Card, specifically supported for all kinds of paper"""
-        wmark = Image.open('./assets/Special/Watermark/{}.png'.format(self._attributes['Paper'])).convert('RGBA')
+        wmark = Image.open('../assets/Special/Watermark/{}.png'.format(self._attributes['Paper'])).convert('RGBA')
         # self.card.paste(wmark, (0, 0), wmark)
         self.card = self.card.convert('RGBA')
         self.card = Image.alpha_composite(self.card, wmark)
@@ -422,7 +421,7 @@ class Card():
 
         # Golden edges
         if self._attributes['Gold edges']:
-            gedges = Image.open('./assets/Special/Gold edges.png').convert('RGBA')
+            gedges = Image.open('../assets/Special/Gold edges.png').convert('RGBA')
             self.card = Image.alpha_composite(self.card, gedges)
 
         # Washed card
@@ -434,12 +433,12 @@ class Card():
                 washed_type = 'Washed Recycled'
             else:
                 washed_type = 'Washed'
-            washed = Image.open('./assets/Special/{}.png'.format(washed_type)).convert('RGBA')
+            washed = Image.open('../assets/Special/{}.png'.format(washed_type)).convert('RGBA')
             self.card = Image.alpha_composite(self.card, washed)
 
         # Cranberry juice
         if self._attributes['Cranberry juice']:
-            cjuice = Image.open('./assets/Special/Cranberry juice.png').convert('RGBA')
+            cjuice = Image.open('../assets/Special/Cranberry juice.png').convert('RGBA')
             self.card = Image.alpha_composite(self.card, cjuice)
 
         # Footprint -- changes depending on paper
@@ -451,17 +450,17 @@ class Card():
                 fprint_type = 'Footprint Recycled'
             else:
                 fprint_type = 'Footprint'
-            fprint = Image.open('./assets/Special/{}.png'.format(fprint_type)).convert('RGBA')
+            fprint = Image.open('../assets/Special/{}.png'.format(fprint_type)).convert('RGBA')
             self.card = Image.alpha_composite(self.card, fprint)
 
         # Defaced with pen
         if self._attributes['Defaced']:
-            defaced = Image.open('./assets/Special/Defaced.png').convert('RGBA')
+            defaced = Image.open('../assets/Special/Defaced.png').convert('RGBA')
             self.card = Image.alpha_composite(self.card, defaced)
 
         # Shadow type - Menacing or Focused
         if self._attributes['Shadow']:
-            shadow = Image.open('./assets/Special/{}.png'.format(self._attributes['Shadow'])).convert('RGBA')
+            shadow = Image.open('../assets/Special/{}.png'.format(self._attributes['Shadow'])).convert('RGBA')
             self.card = Image.alpha_composite(self.card, shadow)
 
         # Gold and silver lettering -- already done when managing fonts!
@@ -475,10 +474,7 @@ class Card():
         Returns:
             path: string, path for the saved file
         """
-        # path = './save/{}.png'.format(filename)
-        # self.card.save(path, 'PNG')
-
-        path = './save/{}.jpg'.format(filename)
+        path = '../save/{}.jpg'.format(filename)
         rgb_im = self.card.convert('RGB')
         rgb_im.save(path, quality=95)
         return path
@@ -492,7 +488,7 @@ class Card():
             path: string, path for the saved file
         """
         size = 644, 462
-        path = './save/{}.jpg'.format(filename)
+        path = '../save/{}.jpg'.format(filename)
         rgb_im = self.card.convert('RGB')
         rgb_im.thumbnail(size, Image.ANTIALIAS)
         rgb_im.save(path, optimize=True, quality=80)
@@ -506,9 +502,8 @@ class Card():
         Returns:
             path: string, IPFS filepath of the uploaded image
         """
-        ipfs_hash = self.pinata.pin_file_to_ipfs(image_path)['IpfsHash']
-        image_url = self.ipfs_gateway + ipfs_hash
-        return image_url
+        image_cid = self.w3.post_upload(('card.jpg', open(image_path, 'rb')))
+        return image_cid
 
     def _upload_thumbnail(self, thumbnail_path):
         """Uploads the generated image to IPFS
@@ -518,11 +513,10 @@ class Card():
         Returns:
             path: string, IPFS filepath of the uploaded thumbnail
         """
-        ipfs_hash = self.pinata.pin_file_to_ipfs(thumbnail_path)['IpfsHash']
-        image_url = self.ipfs_gateway + ipfs_hash
-        return image_url
+        thumbnal_cid = self.w3.post_upload(('thumbnail.jpg', open(thumbnail_path, 'rb')))
+        return thumbnal_cid
 
-    def _generate_metadata(self, image_url, thumbnail_url):
+    def _generate_metadata(self, image_cid, thumbnal_cid):
         """Generates the JSON file that gets uploaded to IPFS to be presented as the tokenURI
 
         Returns:
@@ -551,15 +545,15 @@ class Card():
             "card_name": self.name,
             "card_position": self.position,
             "card_properties": self.properties,
-            "external_url": "https://dorsiaclub-testnet.netlify.app/card/{}".format(self.tokenId),
-            "image": image_url,
-            "thumbnail": thumbnail_url,
-            "attributes": self.attributes  # TODO: check standard for having SPECIAL ATTRIBUTES added to metadata
+            "external_url": "https://dorsiaclub.netlify.app/card/{}".format(self.tokenId),
+            "image": image_cid,
+            "thumbnail": thumbnal_cid,
+            "attributes": self.attributes
         }
 
         return metadata
 
-    def _upload_metadata(self, metadata):
+    def _upload_metadata(self, _metadata):
         """Uploads the generated metadata to IPFS
 
         Parameters:
@@ -567,9 +561,9 @@ class Card():
         Returns:
             tokenURI: string, IPFS filepath of the updated token URI
         """
-
-        ipfs_hash = self.pinata.pin_json_to_ipfs(metadata)
-        return ipfs_hash
+        metadata = json.dumps(_metadata)
+        metadata_uri = self.w3.post_upload(('metadata.json', metadata))
+        return metadata_uri
 
     def get_tokenURI_hash(self):
         """Generates the required tokenURI, first creating the card, then uploading it, and then uploading the metadata
@@ -583,13 +577,13 @@ class Card():
             self._add_watermark()
         self._generate_text()
         self._generate_extras()
-        image_path = self._save_image(self.genes)  # Temporal name, gets deleted afterwards by the oracle
+        _image_path = self._save_image(self.genes)  # Temporal name, gets deleted afterwards by the oracle
         thumbnail_path = self._save_thumbnail('thumb_' + self.genes)
-        _image_url = self._upload_image(image_path)
-        _thumbnail_url = self._upload_thumbnail(thumbnail_path)
-        _metadata = self._generate_metadata(_image_url, _thumbnail_url)  # add thumnail to metadata
+        image_cid = self._upload_image(_image_path)
+        thumbnail_cid = self._upload_thumbnail(thumbnail_path)
+        _metadata = self._generate_metadata(image_cid, thumbnail_cid)  # add thumnail to metadata
 
-        return self._upload_metadata(_metadata)['IpfsHash'], image_path, thumbnail_path
+        return self._upload_metadata(_metadata), _image_path, thumbnail_path
 
 
 if __name__ == '__main__':
@@ -733,5 +727,11 @@ if __name__ == '__main__':
     properties = {'position': 'Vice President', 'twitter_account': 'twitterAccount', 'telegram_account': 'telegramAccount', 'telegram_group': 'telegramGroup', 'discord_account': '123456789012345678', 'discord_group': 'discordGroup', 'github_username': 'githubUsername', 'user_website.com': 'userWebsite.com'}
     properties = {'twitter_account': '', 'telegram_account': '', 'telegram_group': '', 'discord_account': 0, 'discord_group': '', 'github_username': '', 'user_website.com': ''}
     newcardwhatdoyouthink = Card(1, 'Patrick Bateman', 'Vice President', seed, properties)
-    tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
-    print(tokenURI)
+    newcardwhatdoyouthink._generate_base()
+    if newcardwhatdoyouthink._attributes['Watermark']:
+        newcardwhatdoyouthink._add_watermark()
+    newcardwhatdoyouthink._generate_text()
+    newcardwhatdoyouthink._generate_extras()
+    image_path = newcardwhatdoyouthink._save_image(newcardwhatdoyouthink.genes)
+    # tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
+    # print(tokenURI)

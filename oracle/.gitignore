@@ -1,8 +1,15 @@
-# oracle production folders
-__pycache__/
-doc/
-errors/
-logos/
-save/
-.idea/
-assets/
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+
+# Oracle
+.idea
+assets/*
+doc/*

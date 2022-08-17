@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 const hre = require("hardhat");
 
-const bCardAddress = "0x384c8072DA488698Df87c02cDf04499262D4697f";
+const bCardAddress = "0xF6757B78Bf1063cE7F5004e6fcB1dBbEE2d64e10";
 const bCardAbi = require('../artifacts/contracts/BusinessCard.sol/BusinessCard.json')['abi']
 
 async function main() {

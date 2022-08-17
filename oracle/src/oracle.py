@@ -39,7 +39,7 @@ class ListeningOracle():
             self.web3 = Web3(Web3.WebsocketProvider(card_contract['provider']))
         self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-        with open('./doc/BusinessCard.json') as f:
+        with open('../abi/BusinessCard.json') as f:
             cardABI = json.load(f)['abi']  # Reading the provided Card contract ABI
             f.close()
         card_addy = card_contract['addy']
@@ -57,7 +57,7 @@ class ListeningOracle():
         self.message_wait_time = 60 * 60
 
         # Admin Telegram chat
-        with open('./doc/TELEGRAM_API.json') as f:
+        with open('../doc/TELEGRAM_API.json') as f:
             data = json.load(f)
             self.bot_token = data['PRIVATE_BOT_API_TOKEN']
             self.channel_id = data['PRIVATE_CHANNEL_ID']
@@ -65,13 +65,13 @@ class ListeningOracle():
 
         # Read the sneedphrase from the txt file, or generate one if none exists prior
         try:
-            with open('./doc/sneed.txt', 'r') as f:
+            with open('../doc/sneed.txt', 'r') as f:
                 self.sneed = f.read()
                 f.close()
         except FileNotFoundError:
             # No sneed exists, generate one and save it
             self.sneed: str = generate_mnemonic(language="english", strength=128)
-            with open('./doc/sneed.txt', 'x') as f:
+            with open('../doc/sneed.txt', 'x') as f:
                 f.write(self.sneed)
                 f.close()
 
@@ -91,9 +91,9 @@ class ListeningOracle():
         # Get address and private_key"""
 
         # TEMPORARY FIX
-        with open('./doc/pkey.txt', 'r') as f:
+        with open('../doc/pkey.txt', 'r') as f:
             self.pkey = f.read()
-        with open('./doc/addy.txt', 'r') as f:
+        with open('../doc/addy.txt', 'r') as f:
             self.addy = f.read()
 
         """self.addy = bip44_hdwallet.address()
@@ -113,7 +113,7 @@ class ListeningOracle():
                 todump = { "provider": "quicknode" }
             elif provider == "quicknode":
                 todump = { "provider": "moralis" }
-            with open('./doc/node.json', 'w') as f:
+            with open('../doc/node.json', 'w') as f:
                 json.dump(todump, f)
                 f.close()
             # Inform of provider change
@@ -143,7 +143,8 @@ class ListeningOracle():
 
         # Check current values for properties
         current_uri = self.contract.functions.tokenURI(tokenId).call()
-        current_metadata = requests.get(current_uri).json()
+        req_url = 'https://' + current_uri + '.ipfs.dweb.link/'
+        current_metadata = requests.get(req_url).json()
         current_properties = current_metadata['card_properties']
 
         # Fetch properties from the event
@@ -176,23 +177,26 @@ class ListeningOracle():
             else:
                 new_properties[dict_key] = str(event_properties[dict_key])  # The discord account ID will be made string"""
 
-        try:
-            # Use this name, position to generate a new card and get the ipfs hash
-            newcardwhatdoyouthink = Card(tokenId, name, position, genes, new_properties)
-            tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
+        # Use this name, position to generate a new card and get the ipfs hash
+        newcardwhatdoyouthink = Card(tokenId, name, position, genes, new_properties)
+        tokenURI, image_path, thumbnail_path = newcardwhatdoyouthink.get_tokenURI_hash()
 
+        # Calls the Card contract updateCallback function to finalize the update of this tokenURI
+        try:
             callback = self.contract.functions.updateCallback(
                 tokenId,
-                tokenURI[2:]
-                # First two characters of tokenURI are always 'Qm', and thus are taken off - found in baseURI
+                tokenURI
             ).buildTransaction({
                 'from': self.addy,
                 'nonce': self.nonce,
                 'gasPrice': self.web3.eth.gas_price
             })
+        except:
+            pass
 
-            self.nonce += 1
+        self.nonce += 1
 
+        try:
             signed_tx = self.web3.eth.account.sign_transaction(callback, self.pkey)
             # Send transaction
             tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -201,7 +205,7 @@ class ListeningOracle():
             # Inform admin of updated card
             req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                 botToken=self.bot_token, chatID=self.channel_id,
-                text='BTTC: updateCallback for token {}'.format(tokenId)
+                text='updateCallback for token {}'.format(tokenId)
             )
             requests.post(req)
         except:
@@ -209,7 +213,7 @@ class ListeningOracle():
             # TODO: have a vairable to not update block if failed tx
             req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                 botToken=self.bot_token, chatID=self.channel_id,
-                text='BTTC: updateCallback for token {}  failed, restarting'.format(tokenId)
+                text='updateCallback for token {}  failed, restarting'.format(tokenId)
             )
             requests.post(req)
             exit()
@@ -242,39 +246,46 @@ class ListeningOracle():
 
         # Check current values for name, position, and properties of both tokens
         current_uri_1 = self.contract.functions.tokenURI(tokenId1).call()
-        current_metadata_1 = requests.get(current_uri_1).json()
+        req_url_1 = 'https://' + current_uri_1 + '.ipfs.dweb.link/'
+        current_metadata_1 = requests.get(req_url_1).json()
         current_name_1 = current_metadata_1['card_name']
         current_position_1 = current_metadata_1['card_position']
         current_properties_1 = current_metadata_1['card_properties']
 
         current_uri_2 = self.contract.functions.tokenURI(tokenId2).call()
-        current_metadata_2 = requests.get(current_uri_2).json()
+        req_url_2 = 'https://' + current_uri_2 + '.ipfs.dweb.link/'
+        current_metadata_2 = requests.get(req_url_2).json()
         current_name_2 = current_metadata_2['card_name']
         current_position_2 = current_metadata_2['card_position']
         current_properties_2 = current_metadata_2['card_properties']
 
+        # Generate card one keeping genes but using card 2 name/properties
+        newcardwhatdoyouthink_1 = Card(tokenId1, current_name_2, current_position_2, genes1, current_properties_2)
+        tokenURI_1, image_path_1, thumbnail_path_1 = newcardwhatdoyouthink_1.get_tokenURI_hash()
+
+        newcardwhatdoyouthink_2 = Card(tokenId2, current_name_1, current_position_1, genes2, current_properties_1)
+        tokenURI_2, image_path_2, thumbnail_path_2 = newcardwhatdoyouthink_2.get_tokenURI_hash()
+
+        # swapCallback transaction
+        # Calls the Card contract callback function to finalize the update of this tokenURI
         try:
-            # Generate card one keeping genes but using card 2 name/properties
-            newcardwhatdoyouthink_1 = Card(tokenId1, current_name_2, current_position_2, genes1, current_properties_2)
-            tokenURI_1, image_path_1, thumbnail_path_1 = newcardwhatdoyouthink_1.get_tokenURI_hash()
-
-            newcardwhatdoyouthink_2 = Card(tokenId2, current_name_1, current_position_1, genes2, current_properties_1)
-            tokenURI_2, image_path_2, thumbnail_path_2 = newcardwhatdoyouthink_2.get_tokenURI_hash()
-
             callback = self.contract.functions.swapCallback(
                 tokenId1,
                 tokenId2,
-                tokenURI_1[2:],
-                tokenURI_2[2:]
+                tokenURI_1,
+                tokenURI_2
                 # First two characters of tokenURI are always 'Qm', and thus are taken off - found in baseURI
             ).buildTransaction({
                 'from': self.addy,
                 'nonce': self.nonce,
                 'gasPrice': self.web3.eth.gas_price
             })
+        except:
+            pass
 
-            self.nonce += 1
+        self.nonce += 1
 
+        try:
             signed_tx = self.web3.eth.account.sign_transaction(callback, self.pkey)
             # Send transaction
             tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -389,7 +400,7 @@ class ListeningOracle():
                 # Send a request to post the message
                 req = 'https://api.telegram.org/bot{botToken}/sendMessage?chat_id={chatID}&text={text}'.format(
                     botToken=self.bot_token, chatID=self.channel_id,
-                    text='BTTC: Oracle running smoothly, current balance: {}'.format(balance)
+                    text='Oracle running smoothly, current balance: {}'.format(balance)
                 )
                 requests.post(req)
                 # Update the last message time
@@ -428,7 +439,7 @@ class ListeningOracle():
 if __name__ == '__main__':
     processingIds = '0123456789'  # legacy and useless bit i havent brought myself to remove
 
-    with open('doc/node.json') as f:
+    with open('../doc/node.json') as f:
         data = json.load(f)
         provider = data['provider']
         f.close()
@@ -440,43 +451,34 @@ if __name__ == '__main__':
         "provider": 'http://127.0.0.1:7545',  # Testing on Ganache
         "kind": "HTTP"
     }
-    start_block_file = "./doc/start_block_testing.txt"
+    start_block_file = "../doc/start_block_testing.txt"
     """
     if provider == "getblock":
-        with open('doc/ENDPOINT_API.json') as f:
+        with open('../doc/ENDPOINT_API.json') as f:
             data = json.load(f)
             key = data['GETBLOCK_API_KEY']
             f.close()
         rpc = "wss://matic.getblock.io/testnet/?api_key={}".format(key)
     elif provider == "moralis":
-        with open('doc/ENDPOINT_API.json') as f:
+        with open('../doc/ENDPOINT_API.json') as f:
             data = json.load(f)
             key = data['MORALIS_API_KEY']
             f.close()
         rpc = "wss://speedy-nodes-nyc.moralis.io/{}/polygon/mumbai/ws".format(key)
     elif provider == "quicknode":
-        with open('doc/ENDPOINT_API.json') as f:
+        with open('../doc/ENDPOINT_API.json') as f:
             data = json.load(f)
             key = data['QUICKNODE_API_KEY']
             f.close()
         rpc = "wss://delicate-bold-night.matic-testnet.discover.quiknode.pro/{}/".format(key)
 
-    """# MATIC testnet
+    # MATIC testnet
     cardContract = {
-        "addy": '0x384c8072DA488698Df87c02cDf04499262D4697f',
+        "addy": '0xF6757B78Bf1063cE7F5004e6fcB1dBbEE2d64e10',
         "provider": rpc,
         "kind": "WS"
     }
-    start_block_file = "./doc/start_block.txt"
-    """
-
-    # BTTC testnet
-    cardContract = {
-        "addy": '0xac2ef62E283A61D05A1f0a00CF9C8E6d74Ef43ca',
-        "provider": 'https://pre-rpc.bt.io/',
-        "kind": 'HTTP'
-    }
-    start_block_file = "./doc/start_block_bttc.txt"
+    start_block_file = "../doc/start_block.txt"
 
     lo = ListeningOracle(processingIds, cardContract, start_block_file, provider)
     asyncio.run(lo.run())

@@ -25,7 +25,7 @@ export const network = {
 export const bCardAddress = '0xF6757B78Bf1063cE7F5004e6fcB1dBbEE2d64e10'
 export const bCardAbi = require('./abis/BusinessCard.json')['abi']
 
-export const mPlaceAddress = "0xcF2875CD9E12CCD92fFA27d1cE5845e238B40903 ";
+export const mPlaceAddress = "0x0B609Bd8CCa4aCF85724e449316110fc81b820a0";
 export const mPlaceAbi = require('./abis/Marketplace.json')['abi'];
 
 export const sCardAddress = "0x522b44bD500e5eD5563A36E735690a4a6a0A1473";
