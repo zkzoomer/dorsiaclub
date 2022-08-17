@@ -81,7 +81,7 @@ const TokenPageElements = (props) => {
                 let tokenMetadataURL = null;
                 try {
                     tokenMetadataURL = await bCardContract.tokenURI(props.id);
-                    const response = await fetch(tokenMetadataURL);
+                    const response = await fetch('https://' + tokenMetadataURL + '.ipfs.dweb.link');
                     const data = await response.json();
 
                     if (tokenMetadataURL === defaultURI) { // Oracle has not updated the token yet
@@ -299,7 +299,7 @@ const TokenPageElements = (props) => {
                         </Column1>
                         <Column2>
                             <ImgWrap>
-                                <Img src={tokenMetadata ? tokenMetadata.image : require('../../images/placeholder_card.png')}/>
+                                <Img src={tokenMetadata ? 'https://' + tokenMetadata.image + '.ipfs.dweb.link' : require('../../images/placeholder_card.png')}/>
                                 <Description />
                             </ImgWrap>
                         </Column2>

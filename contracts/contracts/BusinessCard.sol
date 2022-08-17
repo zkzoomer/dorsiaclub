@@ -5,13 +5,15 @@
 pragma solidity ^0.8.0;
 
 import "./BusinessCardUtils.sol";
+import "./Marketplace.sol";
+import "./SoulboundCard.sol";
+import "./Oracle.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Enumerable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -56,9 +58,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     // Mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
 
-    // Base URI
-    string private _baseURI;
-
     // Public variables
     uint256 public constant maxSupply = 1111;
     bool public saleStarted;
@@ -93,7 +92,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     string private _defaultURI;
 
     // Address of the oracle
-    address private serverOracle;
+    address private oracle;
     // Requests made to the NFT oracle
     mapping(uint256 => bool) public requests;
 
@@ -103,11 +102,11 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     ISoulboundCard private sCard;
 
     // Token mint price
-    uint256 public mintPrice = 10000 ether;
+    uint256 public mintPrice = 0.1 ether;
     // Token URI update / swap price
-    uint256 public updatePrice = 5000 ether;
+    uint256 public updatePrice = 0.05 ether;
     // Oracle update transaction gas price
-    uint256 public oraclePrice = 1500 ether;
+    uint256 public oraclePrice = 0.025 ether;
 
     // Oracle related events
     event UpdateRequest(uint256 tokenId, uint256 genes, string name, CardProperties cardProperties);
@@ -117,11 +116,11 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection, and defining base and default URIs.
      */
-    constructor (string memory name_, string memory symbol_, string memory baseURI_, string memory defaultURI_) {
+    constructor (string memory name_, string memory symbol_, string memory defaultURI_, address _oracle) {
         _name = name_;
         _symbol = symbol_;
-        _baseURI = baseURI_;
         _defaultURI = defaultURI_;
+        oracle = _oracle;
 
         // register the supported interfaces to conform to ERC721 via ERC165
         /*
@@ -162,8 +161,8 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     /**
      * @dev Sets up a new oracle that handles the dynamic aspect of the NFT
      */
-    function setOracle(address _serverOracle) external onlyOwner {
-        serverOracle = _serverOracle;
+    function setOracle(address _oracle) external onlyOwner {
+        oracle = _oracle;
     }
 
     /**
@@ -198,7 +197,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         require(requests[_tokenId] == false, "Update being processed");
         requests[_tokenId] = true;
         // Fund the server oracle with enough funds for the updateCallback transaction
-        payable(serverOracle).transfer(oraclePrice);
+        payable(oracle).transfer(oraclePrice);
         // Emit event to be catched by the server oracle running off-chain
         emit UpdateRequest(_tokenId, _genes, _cardName, _cardProperties);
     }
@@ -225,7 +224,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * Only the assigned server oracle is allowed to call this function
      */
      function _callback(uint256 _tokenId, string memory _tokenURI) internal {
-        require(_msgSender() == serverOracle); // dev: Only the assigned oracle can call this function
+        require(_msgSender() == oracle); // dev: Only the assigned oracle can call this function
         require(requests[_tokenId]); // dev: Request not in pending list
         _tokenURIs[_tokenId] = _tokenURI;
         delete requests[_tokenId];
@@ -357,7 +356,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
         emit SwapRequest(tokenId1, tokenId2, _tokenStats[tokenId1].genes, _tokenStats[tokenId2].genes);
 
         // Fund the server oracle with enough funds for the swapCallback transaction
-        payable(serverOracle).transfer(oraclePrice);
+        payable(oracle).transfer(oraclePrice);
     }
 
     /**
@@ -371,7 +370,7 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      * @dev Starts the sale, cannot do so until the oracle is defined
      */
     function startSale() external onlyOwner {
-        require(serverOracle != address(0));  // dev: Oracle not defined
+        require(oracle != address(0));  // dev: Oracle not defined
         saleStarted = true;
     }
 
@@ -395,28 +394,17 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
     function tokenURI(uint256 tokenId) external view override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
-        string memory token = _tokenURIs[tokenId];
+        string memory _tokenURI = _tokenURIs[tokenId];
 
-        // If there is no tokenURI, returns the defaultURI, which must be defined after deployment
-        if (bytes(token).length == 0) {
-            return string(abi.encodePacked( baseURI(), defaultURI() ));
+        if (bytes(_tokenURI).length == 0) {
+            return defaultURI();
         } else {
-            return string(abi.encodePacked( baseURI(), token ));
+            return _tokenURI;
         }
     }
 
     /**
-     * @dev For setting the baseURI for all tokenId's.
-     */
-    function setBaseURI(string memory newBaseURI) external onlyOwner {
-        require(bytes(newBaseURI).length > 0);
-        _baseURI = newBaseURI;
-    }
-
-    /**
-    * @dev Returns the default URI set via {_setBaseURI}. This will be
-    * automatically added as a prefix in {tokenURI} to each token's URI, or
-    * to the token ID if no specific URI is set for that token ID.
+    * @dev Returns the default URI
     */
     function defaultURI() public view virtual returns (string memory) {
         return _defaultURI;
@@ -481,15 +469,6 @@ contract BusinessCard is ERC165Storage, IERC721, IERC721Metadata, IERC721Enumera
      */
     function symbol() public view virtual override returns (string memory) {
         return _symbol;
-    }
-
-    /**
-    * @dev Returns the base URI set via {_setBaseURI}. This will be
-    * automatically added as a prefix in {tokenURI} to each token's URI, or
-    * to the token ID if no specific URI is set for that token ID.
-    */
-    function baseURI() public view virtual returns (string memory) {
-        return _baseURI;
     }
 
     /**

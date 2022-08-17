@@ -17,10 +17,10 @@ function App() {
   const [isOpen, setIsOpen] = useState(false);
   const [account, setAccount] = useState("");
   const [chainId, setChainId] = useState(0);
-  /* const [provider, setProvider] = useState(
+  const [provider, setProvider] = useState(
     new ethers.providers.JsonRpcProvider("https://rpc-mumbai.maticvigil.com")
-  ); */
-  const provider = new ethers.providers.JsonRpcProvider("https://pre-rpc.bt.io/")
+  );
+
   // Array having main message, and submessage -- prompts error to user if set to anything
   const [errorMessage, setErrorMessage] = useState([]); 
 

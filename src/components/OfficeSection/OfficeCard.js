@@ -15,11 +15,10 @@ const OfficeCard = (props) => {
     } 
 
     useEffect(() => {
-
         async function fetchData() {
             let tokenMetadataURL = null;
             tokenMetadataURL = await props.contract.tokenURI(props.id);
-            const response = await fetch(tokenMetadataURL);
+            const response = await fetch('https://' + tokenMetadataURL + '.ipfs.dweb.link/');
             const data = await response.json();
             if (props.marketplaceSwitchOn) {
                 const listing = await props.mPlaceContract.getLatestMarketItemByTokenId(props.id)
@@ -32,7 +31,6 @@ const OfficeCard = (props) => {
     // eslint-disable-next-line
     }, [])
 
-    // TODO: show THUMBNAIL, not full IMAGE, in order to reduce total bandwidth
     return(
         <>
         <Card 
@@ -44,7 +42,7 @@ const OfficeCard = (props) => {
             <a className='card-link' href={'../card/' + props.id} exact="true"/>
             <Card.Img 
                 variant="top" 
-                src={tokenMetadata ? tokenMetadata.thumbnail : require('../../images/placeholder_card.png')} 
+                src={tokenMetadata ? 'https://' + tokenMetadata.thumbnail + '.ipfs.dweb.link' : require('../../images/placeholder_card.png')} 
             />
             <Card.Body>
             <Card.Title>{stylizedTokenNumber(props.id)}</Card.Title>

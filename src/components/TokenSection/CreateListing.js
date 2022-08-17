@@ -91,6 +91,7 @@ const Input = styled.input`
   
 `
 
+// TODO: no need to approve marketplace smart contract, can be interacted with by default
 const CreateListingSection = (props) => {
     const [isApproved, setIsApproved] = useState(false);
     const [buttonEnabled, setButtonEnabled] = useState(false);

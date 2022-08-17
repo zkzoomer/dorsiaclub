@@ -1,8 +1,7 @@
 const { ethers } = require("hardhat");
 const hre = require("hardhat");
 
-const baseURI = 'https://dorsiaclub.mypinata.cloud/ipfs/Qm';
-const defaultURI = 'bFp3rybuvZ7j9e4xB6WLedu8gvLcjbVqUrGUEugQWz9u';
+const defaultURI = 'bafkreiexdok6ezqxwwgd57zxdg5yaxfxm5w4suu2iw33opkr35rajg5qz4';
 const oracleAddress = '0xdDD03F9E31AB2dE5D7DCB261210c3bC76ca62AE8';
 
 async function main() {
@@ -16,8 +15,7 @@ async function main() {
 	const mPlaceContract = await ethers.getContractFactory("Marketplace");
 	const sCardContract = await ethers.getContractFactory("SoulboundCard");
 
-	const bCard = await bCardContract.deploy('Business Card', 'BCARD', baseURI, defaultURI);
-	await bCard.setOracle(oracleAddress);
+	const bCard = await bCardContract.deploy('Business Card', 'BCARD', defaultURI, oracleAddress);
 
 	const mPlace = await mPlaceContract.deploy(bCard.address);
 	await bCard.setMarketplace(mPlace.address);

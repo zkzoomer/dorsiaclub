@@ -1,20 +1,6 @@
 import { ethers } from "ethers"; 
 
-export const chainId = 1029;
-
-export const network = {
-  chainId: `0x${Number(chainId).toString(16)}`,
-  chainName: "BitTorrent Chain Donau",
-  nativeCurrency: {
-    name: "BitTorrent",
-    symbol: "BTT",
-    decimals: 18
-  },
-  rpcUrls: ["https://testscan.bt.io/"],
-  blockExplorerUrls: ["https://testnet.bttcscan.com/"]
-};
-
-/* export const chainId = 80001;
+export const chainId = 80001;
 
 export const network = {
   chainId: `0x${Number(chainId).toString(16)}`,
@@ -26,7 +12,7 @@ export const network = {
   },
   rpcUrls: ["https://rpc-mumbai.maticvigil.com"],
   blockExplorerUrls: ["https://mumbai.polygonscan.com"]
-}; */
+};
 
 /* export const config = {
     readOnlyChainId: chainId,
@@ -36,24 +22,24 @@ export const network = {
 }; */
 
 // Business Card smart contract
-export const bCardAddress = '0xac2ef62E283A61D05A1f0a00CF9C8E6d74Ef43ca'
+export const bCardAddress = '0xF6757B78Bf1063cE7F5004e6fcB1dBbEE2d64e10'
 export const bCardAbi = require('./abis/BusinessCard.json')['abi']
 
-export const mPlaceAddress = "0x952F56CBAB21Fcef245ab854B900638b05668EB9";
+export const mPlaceAddress = "0xc362Bc915887ac4626C524a805A1078584c08BDc";
 export const mPlaceAbi = require('./abis/Marketplace.json')['abi'];
 
-export const sCardAddress = "0x8568c662c4c00F095b2D86f2179A86D823A4379b";
+export const sCardAddress = "0x522b44bD500e5eD5563A36E735690a4a6a0A1473";
 export const sCardAbi = require('./abis/SoulboundCard.json')['abi'];
 
 // Default URI fed to the smart contract
-export const defaultURI = 'https://dorsiaclub.mypinata.cloud/ipfs/QmbFp3rybuvZ7j9e4xB6WLedu8gvLcjbVqUrGUEugQWz9u'
+export const defaultURI = 'bafkreiexdok6ezqxwwgd57zxdg5yaxfxm5w4suu2iw33opkr35rajg5qz4'
 
 // Card minting and updating requirements
-export const mintPrice = ethers.utils.parseUnits("10000","ether");
-export const updatePrice = ethers.utils.parseUnits("5000","ether");
+export const mintPrice = ethers.utils.parseUnits("0.1","ether");
+export const updatePrice = ethers.utils.parseUnits("0.05","ether");
 export const _updatePrice = 0.05;
 
-export const mPlaceOracleFee = ethers.utils.parseUnits("1500", "ether")
+export const mPlaceOracleFee = ethers.utils.parseUnits("0.025", "ether")
 
 // Card naming requirements
 export const maxNameLength = 22;
