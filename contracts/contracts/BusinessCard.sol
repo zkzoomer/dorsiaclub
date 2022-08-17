@@ -7,7 +7,6 @@ pragma solidity ^0.8.0;
 import "./BusinessCardUtils.sol";
 import "./Marketplace.sol";
 import "./SoulboundCard.sol";
-import "./Oracle.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Enumerable.sol";
