@@ -96,7 +96,7 @@ const CreateListingSection = (props) => {
     const [isApproved, setIsApproved] = useState(false);
     const [buttonEnabled, setButtonEnabled] = useState(false);
     const [awaitingTx, setAwaitingTx] = useState(false);
-    const [listingPrice, setListingPrice] = useState("5000");
+    const [listingPrice, setListingPrice] = useState("0.05");
 
     useEffect(() => {
         if(
@@ -142,7 +142,7 @@ const CreateListingSection = (props) => {
                 setAwaitingTx(false);
             }
         } else {
-            props.setErrorMessage(['Price is too low', 'Listing price must be at least 5000 BTTC'])
+            props.setErrorMessage(['Price is too low', 'Listing price must be at least 0.05 MATIC'])
             setAwaitingTx(false);
         }
     }
@@ -187,7 +187,7 @@ const CreateListingSection = (props) => {
                 <InputWrapper>
                     <Input value={listingPrice} onChange={onChange}>
                     </Input>
-                    &nbsp; BTTC
+                    &nbsp; MATIC
                 </InputWrapper>
             </ListingWrapper>
             {buttonComponent}

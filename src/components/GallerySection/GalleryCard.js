@@ -64,7 +64,7 @@ const GalleryCard = (props) => {
                 <br />
                 {
                     props.marketplaceSwitchOn ? 
-                        `Listed for ${listingPrice} BTTC`
+                        `Listed for ${listingPrice} MATIC`
                     :
                         ""
                 }

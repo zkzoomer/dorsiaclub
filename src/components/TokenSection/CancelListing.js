@@ -128,7 +128,7 @@ const CancelListingSection = (props) => {
         <Wrapper>
             <CancelText>
                 You listed this Business Card for: <br />
-                {props.metadata['listing_price']} BTTC
+                {props.metadata['listing_price']} MATIC
             </CancelText>
             <ButtonWrapper>
                 {buttonComponent}
